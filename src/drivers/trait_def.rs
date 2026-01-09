@@ -1,5 +1,4 @@
 /// The Driver trait definition
-
 use crate::ir::Blueprint;
 
 pub trait Driver {

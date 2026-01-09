@@ -1,4 +1,4 @@
-use clap::Parser;
+use clap::{CommandFactory, Parser};
 use codetwin::cli::{Cli, Commands};
 use codetwin::engine::SyncEngine;
 
@@ -69,11 +69,11 @@ fn main() {
             engine.list()
         }
         None => {
-            // No subcommand provided - default to watch
-            if !cli.quiet {
-                println!("Starting watch mode (default)...");
-            }
-            engine.watch()
+            // No subcommand provided - print help and exit
+            let mut cmd = Cli::command();
+            cmd.print_help().ok();
+            println!();
+            std::process::exit(0);
         }
     };
 
