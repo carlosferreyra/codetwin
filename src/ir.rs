@@ -1,13 +1,12 @@
 /// Intermediate Representation - The "Universal Structs"
 /// Inspired by UML/OO paradigm for cross-language documentation sync
-
 use std::path::PathBuf;
 
 /// Blueprint = Complete structural representation of a source file
 #[derive(Debug, Clone, PartialEq)]
 pub struct Blueprint {
     pub source_path: PathBuf,
-    pub language: String,           // "python", "typescript", "rust", etc.
+    pub language: String, // "python", "typescript", "rust", etc.
     pub elements: Vec<Element>,
 }
 
@@ -60,7 +59,7 @@ pub struct Method {
 pub struct Property {
     pub name: String,
     pub visibility: Visibility,
-    pub type_annotation: Option<String>,  // Simple string: "str", "List[int]", "Promise<User>"
+    pub type_annotation: Option<String>, // Simple string: "str", "List[int]", "Promise<User>"
     pub documentation: Documentation,
 }
 
@@ -68,15 +67,15 @@ pub struct Property {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Signature {
     pub parameters: Vec<Parameter>,
-    pub return_type: Option<String>,  // Simple string: "void", "int", "Result<T, E>"
+    pub return_type: Option<String>, // Simple string: "void", "int", "Result<T, E>"
 }
 
 /// Parameter = Function/method argument
 #[derive(Debug, Clone, PartialEq)]
 pub struct Parameter {
     pub name: String,
-    pub type_annotation: Option<String>,  // Simple string
-    pub default_value: Option<String>,    // "None", "0", "true"
+    pub type_annotation: Option<String>, // Simple string
+    pub default_value: Option<String>,   // "None", "0", "true"
 }
 
 /// Visibility = Access modifier
@@ -85,13 +84,13 @@ pub enum Visibility {
     Public,
     Private,
     Protected,
-    Internal,  // For languages like C#, Kotlin
+    Internal, // For languages like C#, Kotlin
 }
 
 /// Documentation = Prose extracted from comments/docstrings
 #[derive(Debug, Clone, PartialEq)]
 pub struct Documentation {
-    pub summary: Option<String>,      // One-line description
-    pub description: Option<String>,  // Multi-line detailed explanation
-    pub examples: Vec<String>,        // Code snippets showing usage
+    pub summary: Option<String>,     // One-line description
+    pub description: Option<String>, // Multi-line detailed explanation
+    pub examples: Vec<String>,       // Code snippets showing usage
 }
