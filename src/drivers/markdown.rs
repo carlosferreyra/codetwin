@@ -88,7 +88,7 @@ pub fn generate_index_md(modules: &[&str]) -> Result<String, String> {
 }
 
 fn format_module_path(module: &str) -> String {
-    format!("src/{}.md", module.replace("::", "/"))
+    format!("{}.md", module)
 }
 
 fn generate_mermaid_diagram(blueprint: &Blueprint) -> Option<String> {
