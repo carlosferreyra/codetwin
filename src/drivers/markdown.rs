@@ -25,6 +25,15 @@ impl Driver for MarkdownDriver {
 
         output.push_str("---\n\n");
 
+        // Mermaid Class Diagram
+        if let Some(mermaid) = generate_mermaid_diagram(blueprint) {
+            output.push_str("## Class Diagram\n\n");
+            output.push_str("```mermaid\n");
+            output.push_str(&mermaid);
+            output.push_str("```\n\n");
+            output.push_str("---\n\n");
+        }
+
         // Elements
         for element in &blueprint.elements {
             match element {
@@ -110,5 +119,69 @@ fn format_visibility(vis: &Visibility) -> &'static str {
         Visibility::Private => "private",
         Visibility::Protected => "protected",
         Visibility::Internal => "internal",
+    }
+}
+
+fn generate_mermaid_diagram(blueprint: &Blueprint) -> Option<String> {
+    // Only generate if there are classes or functions
+    if blueprint.elements.is_empty() {
+        return None;
+    }
+
+    let mut diagram = String::from("classDiagram\n");
+
+    for element in &blueprint.elements {
+        match element {
+            Element::Class(class) => {
+                diagram.push_str(&format!("    class {} {{\n", class.name));
+
+                // Properties
+                for prop in &class.properties {
+                    let visibility_symbol = mermaid_visibility(&prop.visibility);
+                    let type_str = prop.type_annotation.as_deref().unwrap_or("_");
+                    diagram.push_str(&format!("        {}{} {}\n", visibility_symbol, prop.name, type_str));
+                }
+
+                // Methods
+                for method in &class.methods {
+                    let visibility_symbol = mermaid_visibility(&method.visibility);
+                    let params: Vec<String> = method.signature.parameters.iter()
+                        .filter(|p| p.name != "self")
+                        .map(|p| {
+                            let type_str = p.type_annotation.as_deref().unwrap_or("_");
+                            format!("{}: {}", p.name, type_str)
+                        })
+                        .collect();
+                    let return_str = method.signature.return_type.as_deref().unwrap_or("void");
+                    
+                    diagram.push_str(&format!("        {}{}({}) {}\n", 
+                        visibility_symbol, 
+                        method.name, 
+                        params.join(", "),
+                        return_str
+                    ));
+                }
+
+                diagram.push_str("    }\n");
+            }
+            Element::Function(_) => {
+                // Functions could be represented as utility classes or module-level
+                // For now, skip standalone functions in class diagram
+            }
+            Element::Module(_) => {
+                // Modules typically aren't shown in class diagrams
+            }
+        }
+    }
+
+    Some(diagram)
+}
+
+fn mermaid_visibility(vis: &Visibility) -> &'static str {
+    match vis {
+        Visibility::Public => "+",
+        Visibility::Private => "-",
+        Visibility::Protected => "#",
+        Visibility::Internal => "~",
     }
 }
