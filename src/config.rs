@@ -1,6 +1,7 @@
 /// Configuration management - reads/writes codetwin.toml
 use std::fs;
 use std::path::Path;
+use toml::Table;
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -64,6 +65,56 @@ watch_pattern = "{}"
         fs::write(path, content).map_err(|e| format!("Failed to write codetwin.toml: {}", e))?;
 
         Ok(())
+    }
+
+    /// Load config from codetwin.toml
+    pub fn load(path: &str) -> Result<Self, String> {
+        let content =
+            fs::read_to_string(path).map_err(|e| format!("Failed to read {}: {}", path, e))?;
+
+        let table: Table = content
+            .parse()
+            .map_err(|e| format!("Failed to parse {}: {}", path, e))?;
+
+        let codetwin = table
+            .get("codetwin")
+            .and_then(|v| v.as_table())
+            .ok_or_else(|| "Missing [codetwin] section in config".to_string())?;
+
+        let output_dir = codetwin
+            .get("output_dir")
+            .and_then(|v| v.as_str())
+            .unwrap_or("docs")
+            .to_string();
+
+        let source_dirs = codetwin
+            .get("source_dirs")
+            .and_then(|v| v.as_array())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                    .collect()
+            })
+            .unwrap_or_else(|| vec!["src".to_string()]);
+
+        let main_diagram = codetwin
+            .get("main_diagram")
+            .and_then(|v| v.as_str())
+            .unwrap_or("STRUCT.md")
+            .to_string();
+
+        let watch_pattern = codetwin
+            .get("watch_pattern")
+            .and_then(|v| v.as_str())
+            .unwrap_or("**/*.rs")
+            .to_string();
+
+        Ok(Config {
+            output_dir,
+            source_dirs,
+            main_diagram,
+            watch_pattern,
+        })
     }
 }
 
