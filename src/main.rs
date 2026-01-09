@@ -20,23 +20,55 @@ fn main() {
     let engine = SyncEngine::new();
 
     let result = match cli.command {
-        Some(Commands::Watch { source, output, strategy, debounce, notify }) => {
+        Some(Commands::Watch {
+            source,
+            output,
+            strategy,
+            debounce,
+            notify,
+        }) => {
             if !cli.quiet {
                 println!("Starting watch mode...");
-                println!("  source: {:?}", source.unwrap_or_else(|| "auto-detect".to_string()));
-                println!("  output: {:?}", output.unwrap_or_else(|| "auto-detect".to_string()));
-                println!("  strategy: {:?}", strategy.unwrap_or_else(|| "auto-detect".to_string()));
+                println!(
+                    "  source: {:?}",
+                    source.unwrap_or_else(|| "auto-detect".to_string())
+                );
+                println!(
+                    "  output: {:?}",
+                    output.unwrap_or_else(|| "auto-detect".to_string())
+                );
+                println!(
+                    "  strategy: {:?}",
+                    strategy.unwrap_or_else(|| "auto-detect".to_string())
+                );
                 println!("  debounce: {}ms", debounce);
                 println!("  notify: {}", notify);
             }
             engine.watch()
         }
-        Some(Commands::Sync { source, output, strategy, dry_run, docs_only, code_only, force }) => {
+        Some(Commands::Sync {
+            source,
+            output,
+            strategy,
+            dry_run,
+            docs_only,
+            code_only,
+            force,
+        }) => {
             if !cli.quiet {
                 println!("Running sync...");
-                println!("  source: {:?}", source.unwrap_or_else(|| "auto-detect".to_string()));
-                println!("  output: {:?}", output.unwrap_or_else(|| "auto-detect".to_string()));
-                println!("  strategy: {:?}", strategy.unwrap_or_else(|| "auto-detect".to_string()));
+                println!(
+                    "  source: {:?}",
+                    source.unwrap_or_else(|| "auto-detect".to_string())
+                );
+                println!(
+                    "  output: {:?}",
+                    output.unwrap_or_else(|| "auto-detect".to_string())
+                );
+                println!(
+                    "  strategy: {:?}",
+                    strategy.unwrap_or_else(|| "auto-detect".to_string())
+                );
                 println!("  dry-run: {}", dry_run);
                 println!("  docs-only: {}", docs_only);
                 println!("  code-only: {}", code_only);
@@ -44,7 +76,11 @@ fn main() {
             }
             engine.sync()
         }
-        Some(Commands::Check { strict, diff, fail_on_warnings }) => {
+        Some(Commands::Check {
+            strict,
+            diff,
+            fail_on_warnings,
+        }) => {
             if !cli.quiet {
                 println!("Running check...");
                 println!("  strict: {}", strict);
@@ -53,7 +89,11 @@ fn main() {
             }
             engine.check()
         }
-        Some(Commands::Init { shadow, fractal, git_hook }) => {
+        Some(Commands::Init {
+            shadow,
+            fractal,
+            git_hook,
+        }) => {
             if !cli.quiet {
                 println!("Initializing project structure...");
                 println!("  shadow: {}", shadow);
