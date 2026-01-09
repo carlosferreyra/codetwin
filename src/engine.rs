@@ -16,7 +16,7 @@ impl SyncEngine {
     }
 
     pub fn sync(&self) -> Result<(), String> {
-        // Generate multiple files per blueprint + index
+        // Generate one diagram per folder + index
         println!("📦 Creating mock Blueprints for demonstration...");
 
         let blueprints = vec![
@@ -29,31 +29,43 @@ impl SyncEngine {
         println!("📝 Creating docs directory...");
         fs::create_dir_all(&output_dir).map_err(|e| format!("Failed to create docs dir: {}", e))?;
 
-        // Generate individual .rs.md files
-        for blueprint in &blueprints {
-            let file_name = format!(
-                "{}.md",
-                blueprint
-                    .source_path
-                    .file_stem()
-                    .and_then(|s| s.to_str())
-                    .unwrap_or("unknown")
-            );
+        // Group blueprints by folder
+        use std::collections::BTreeMap;
+        let mut folder_blueprints: BTreeMap<String, Vec<Blueprint>> = BTreeMap::new();
+
+        for blueprint in blueprints.iter().cloned() {
+            let folder = blueprint
+                .source_path
+                .parent()
+                .and_then(|p| p.file_name())
+                .and_then(|f| f.to_str())
+                .unwrap_or("root")
+                .to_string();
+
+            folder_blueprints
+                .entry(folder)
+                .or_insert_with(Vec::new)
+                .push(blueprint);
+        }
+
+        // Generate one .md file per folder
+        for (folder, folder_bps) in folder_blueprints.iter() {
+            let file_name = format!("{}.md", folder);
             let file_path = output_dir.join(&file_name);
 
             println!("  → Generating {}", file_name);
-            let markdown = generate_file_md(&blueprint)
+            let markdown = generate_file_md(&folder_bps)
                 .map_err(|e| format!("Failed to generate markdown: {}", e))?;
 
             fs::write(&file_path, markdown)
                 .map_err(|e| format!("Failed to write {}: {}", file_path.display(), e))?;
         }
 
-        // Generate index
-        let modules = vec!["engine", "drivers", "ir"];
+        // Generate index with folder dependency graph
+        let folders: Vec<&String> = folder_blueprints.keys().collect();
         println!("📝 Generating index (STRUCT.md)...");
-        let index =
-            generate_index_md(&modules).map_err(|e| format!("Failed to generate index: {}", e))?;
+        let index = generate_index_md(&folders.iter().map(|s| s.as_str()).collect::<Vec<_>>())
+            .map_err(|e| format!("Failed to generate index: {}", e))?;
 
         let index_path = output_dir.join("STRUCT.md");
         fs::write(&index_path, index).map_err(|e| format!("Failed to write index: {}", e))?;
@@ -64,16 +76,11 @@ impl SyncEngine {
         );
         println!("   Files created:");
         println!("   - {}", index_path.display());
-        for blueprint in &blueprints {
-            let file_name = format!(
-                "{}.md",
-                blueprint
-                    .source_path
-                    .file_stem()
-                    .and_then(|s| s.to_str())
-                    .unwrap_or("unknown")
+        for folder in folder_blueprints.keys() {
+            println!(
+                "   - {}",
+                output_dir.join(format!("{}.md", folder)).display()
             );
-            println!("   - {}", output_dir.join(&file_name).display());
         }
 
         Ok(())
