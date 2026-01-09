@@ -1,6 +1,7 @@
 use crate::drivers::markdown::{generate_file_md, generate_index_md};
 /// The "Brain" - SyncEngine and the Loop logic
 use crate::ir::*;
+use crate::config::{Config, struct_md_template};
 use std::fs;
 use std::path::PathBuf;
 
@@ -91,7 +92,33 @@ impl SyncEngine {
     }
 
     pub fn init(&self) -> Result<(), String> {
-        Err("init: Not implemented yet".to_string())
+        println!("🚀 Initializing codetwin project...\n");
+
+        // Create default config
+        let config = Config::default();
+
+        // Create docs directory
+        println!("📁 Creating {} directory...", config.output_dir);
+        fs::create_dir_all(&config.output_dir)
+            .map_err(|e| format!("Failed to create {}: {}", config.output_dir, e))?;
+
+        // Write config file
+        println!("⚙️  Creating codetwin.toml...");
+        config.save()?;
+
+        // Write template STRUCT.md
+        let struct_path = PathBuf::from(&config.output_dir).join(&config.main_diagram);
+        println!("📝 Creating {}...", struct_path.display());
+        fs::write(&struct_path, struct_md_template())
+            .map_err(|e| format!("Failed to write {}: {}", struct_path.display(), e))?;
+
+        println!("\n✅ Project initialized successfully!\n");
+        println!("📖 Next steps:");
+        println!("   1. Review codetwin.toml and customize if needed");
+        println!("   2. Run 'codetwin sync' to generate documentation");
+        println!("   3. Check docs/ for the generated STRUCT.md\n");
+
+        Ok(())
     }
 
     pub fn list(&self) -> Result<(), String> {

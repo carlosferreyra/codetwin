@@ -1,0 +1,12 @@
+[codetwin]
+# Output directory for generated documentation
+output_dir = "docs"
+
+# Source directories to scan
+source_dirs = ["src"]
+
+# Main diagram filename
+main_diagram = "STRUCT.md"
+
+# Watch pattern for file monitoring
+watch_pattern = "**/*.rs"
