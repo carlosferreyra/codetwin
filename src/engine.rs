@@ -1,4 +1,4 @@
-use crate::drivers::{markdown::MarkdownDriver, trait_def::Driver};
+use crate::drivers::markdown::{generate_file_md, generate_index_md};
 /// The "Brain" - SyncEngine and the Loop logic
 use crate::ir::*;
 use std::fs;
@@ -16,23 +16,66 @@ impl SyncEngine {
     }
 
     pub fn sync(&self) -> Result<(), String> {
-        // Simple alpha flow: generate STRUCT.md from a mock Blueprint
-        println!("📦 Creating mock Blueprint for demonstration...");
+        // Generate multiple files per blueprint + index
+        println!("📦 Creating mock Blueprints for demonstration...");
 
-        let blueprint = self.create_mock_blueprint();
+        let blueprints = vec![
+            self.create_mock_engine_blueprint(),
+            self.create_mock_driver_blueprint(),
+            self.create_mock_ir_blueprint(),
+        ];
 
-        println!("📝 Generating STRUCT.md from Blueprint...");
-        let md_driver = MarkdownDriver;
-        let markdown = md_driver
-            .generate(&blueprint)
-            .map_err(|e| format!("Failed to generate markdown: {}", e))?;
+        let output_dir = PathBuf::from("docs");
+        println!("📝 Creating docs directory...");
+        fs::create_dir_all(&output_dir).map_err(|e| format!("Failed to create docs dir: {}", e))?;
 
-        let output_path = PathBuf::from("STRUCT.md");
-        println!("💾 Writing to {}...", output_path.display());
+        // Generate individual .rs.md files
+        for blueprint in &blueprints {
+            let file_name = format!(
+                "{}.md",
+                blueprint
+                    .source_path
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("unknown")
+            );
+            let file_path = output_dir.join(&file_name);
 
-        fs::write(&output_path, markdown).map_err(|e| format!("Failed to write file: {}", e))?;
+            println!("  → Generating {}", file_name);
+            let markdown = generate_file_md(&blueprint)
+                .map_err(|e| format!("Failed to generate markdown: {}", e))?;
 
-        println!("✅ Successfully generated {}", output_path.display());
+            fs::write(&file_path, markdown)
+                .map_err(|e| format!("Failed to write {}: {}", file_path.display(), e))?;
+        }
+
+        // Generate index
+        let modules = vec!["engine", "drivers", "ir"];
+        println!("📝 Generating index (STRUCT.md)...");
+        let index =
+            generate_index_md(&modules).map_err(|e| format!("Failed to generate index: {}", e))?;
+
+        let index_path = output_dir.join("STRUCT.md");
+        fs::write(&index_path, index).map_err(|e| format!("Failed to write index: {}", e))?;
+
+        println!(
+            "✅ Successfully generated documentation in {}",
+            output_dir.display()
+        );
+        println!("   Files created:");
+        println!("   - {}", index_path.display());
+        for blueprint in &blueprints {
+            let file_name = format!(
+                "{}.md",
+                blueprint
+                    .source_path
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("unknown")
+            );
+            println!("   - {}", output_dir.join(&file_name).display());
+        }
+
         Ok(())
     }
 
@@ -48,8 +91,8 @@ impl SyncEngine {
         Err("list: Not implemented yet".to_string())
     }
 
-    // Helper: Create a mock Blueprint representing codetwin's structure
-    fn create_mock_blueprint(&self) -> Blueprint {
+    // Mock Blueprints for demonstration
+    fn create_mock_engine_blueprint(&self) -> Blueprint {
         Blueprint {
             source_path: PathBuf::from("src/engine.rs"),
             language: "rust".to_string(),
@@ -76,31 +119,104 @@ impl SyncEngine {
                         visibility: Visibility::Public,
                         is_static: false,
                         signature: Signature {
-                            parameters: vec![Parameter {
-                                name: "self".to_string(),
-                                type_annotation: Some("&self".to_string()),
-                                default_value: None,
-                            }],
+                            parameters: vec![],
                             return_type: Some("Result<(), String>".to_string()),
                         },
                         documentation: Documentation {
-                            summary: Some(
-                                "Runs the synchronization logic once and exits".to_string(),
-                            ),
-                            description: Some(
-                                "Generates STRUCT.md from the codebase structure".to_string(),
-                            ),
+                            summary: Some("Generates documentation from source".to_string()),
+                            description: None,
                             examples: vec![],
                         },
                     },
                 ],
                 properties: vec![],
                 documentation: Documentation {
-                    summary: Some("The core synchronization engine".to_string()),
-                    description: Some(
-                        "Orchestrates code parsing, IR generation, and documentation output"
-                            .to_string(),
-                    ),
+                    summary: Some("Core synchronization engine".to_string()),
+                    description: None,
+                    examples: vec![],
+                },
+            })],
+        }
+    }
+
+    fn create_mock_driver_blueprint(&self) -> Blueprint {
+        Blueprint {
+            source_path: PathBuf::from("src/drivers/mod.rs"),
+            language: "rust".to_string(),
+            elements: vec![Element::Class(Class {
+                name: "Driver".to_string(),
+                visibility: Visibility::Public,
+                methods: vec![Method {
+                    name: "parse".to_string(),
+                    visibility: Visibility::Public,
+                    is_static: false,
+                    signature: Signature {
+                        parameters: vec![Parameter {
+                            name: "content".to_string(),
+                            type_annotation: Some("&str".to_string()),
+                            default_value: None,
+                        }],
+                        return_type: Some("Result<Blueprint, String>".to_string()),
+                    },
+                    documentation: Documentation {
+                        summary: Some("Parses source code into Blueprint".to_string()),
+                        description: None,
+                        examples: vec![],
+                    },
+                }],
+                properties: vec![],
+                documentation: Documentation {
+                    summary: Some("Adapter trait for language-specific parsing".to_string()),
+                    description: None,
+                    examples: vec![],
+                },
+            })],
+        }
+    }
+
+    fn create_mock_ir_blueprint(&self) -> Blueprint {
+        Blueprint {
+            source_path: PathBuf::from("src/ir.rs"),
+            language: "rust".to_string(),
+            elements: vec![Element::Class(Class {
+                name: "Blueprint".to_string(),
+                visibility: Visibility::Public,
+                methods: vec![],
+                properties: vec![
+                    Property {
+                        name: "source_path".to_string(),
+                        visibility: Visibility::Public,
+                        type_annotation: Some("PathBuf".to_string()),
+                        documentation: Documentation {
+                            summary: None,
+                            description: None,
+                            examples: vec![],
+                        },
+                    },
+                    Property {
+                        name: "language".to_string(),
+                        visibility: Visibility::Public,
+                        type_annotation: Some("String".to_string()),
+                        documentation: Documentation {
+                            summary: None,
+                            description: None,
+                            examples: vec![],
+                        },
+                    },
+                    Property {
+                        name: "elements".to_string(),
+                        visibility: Visibility::Public,
+                        type_annotation: Some("Vec<Element>".to_string()),
+                        documentation: Documentation {
+                            summary: None,
+                            description: None,
+                            examples: vec![],
+                        },
+                    },
+                ],
+                documentation: Documentation {
+                    summary: Some("Universal intermediate representation".to_string()),
+                    description: None,
                     examples: vec![],
                 },
             })],

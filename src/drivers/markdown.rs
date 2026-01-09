@@ -1,7 +1,6 @@
-/// Markdown generator - Blueprint → STRUCT.md
-
-use crate::ir::{Blueprint, Element, Visibility};
 use super::trait_def::Driver;
+/// Markdown generator - Blueprint → file-level .rs.md with class diagram
+use crate::ir::{Blueprint, Element, Visibility};
 
 pub struct MarkdownDriver;
 
@@ -11,115 +10,81 @@ impl Driver for MarkdownDriver {
     }
 
     fn generate(&self, blueprint: &Blueprint) -> Result<String, String> {
-        let mut output = String::new();
-
-        // Header
-        output.push_str(&format!("# {}\n\n",
-            blueprint.source_path.file_stem()
-                .and_then(|s| s.to_str())
-                .unwrap_or("Unknown")
-        ));
-
-        output.push_str(&format!("> Language: **{}**\n\n", blueprint.language));
-        output.push_str(&format!("> Source: `{}`\n\n", blueprint.source_path.display()));
-
-        output.push_str("---\n\n");
-
-        // Mermaid Class Diagram
-        if let Some(mermaid) = generate_mermaid_diagram(blueprint) {
-            output.push_str("## Class Diagram\n\n");
-            output.push_str("```mermaid\n");
-            output.push_str(&mermaid);
-            output.push_str("```\n\n");
-            output.push_str("---\n\n");
-        }
-
-        // Elements
-        for element in &blueprint.elements {
-            match element {
-                Element::Module(module) => {
-                    output.push_str(&format!("## Module: {}\n\n", module.name));
-                    if let Some(summary) = &module.documentation.summary {
-                        output.push_str(&format!("{}\n\n", summary));
-                    }
-                    if let Some(desc) = &module.documentation.description {
-                        output.push_str(&format!("{}\n\n", desc));
-                    }
-                }
-                Element::Class(class) => {
-                    output.push_str(&format!("## Class: `{}`\n\n", class.name));
-                    output.push_str(&format!("**Visibility:** {}\n\n", format_visibility(&class.visibility)));
-
-                    if let Some(summary) = &class.documentation.summary {
-                        output.push_str(&format!("{}\n\n", summary));
-                    }
-
-                    // Properties
-                    if !class.properties.is_empty() {
-                        output.push_str("### Properties\n\n");
-                        for prop in &class.properties {
-                            let type_str = prop.type_annotation.as_deref().unwrap_or("unknown");
-                            output.push_str(&format!("- `{}`: {} ({})\n",
-                                prop.name, type_str, format_visibility(&prop.visibility)));
-                        }
-                        output.push_str("\n");
-                    }
-
-                    // Methods
-                    if !class.methods.is_empty() {
-                        output.push_str("### Methods\n\n");
-                        for method in &class.methods {
-                            let params: Vec<String> = method.signature.parameters.iter()
-                                .map(|p| {
-                                    let type_str = p.type_annotation.as_deref().unwrap_or("_");
-                                    format!("{}: {}", p.name, type_str)
-                                })
-                                .collect();
-                            let return_str = method.signature.return_type.as_deref().unwrap_or("void");
-
-                            output.push_str(&format!("#### `{}({})`\n\n", method.name, params.join(", ")));
-                            output.push_str(&format!("**Returns:** `{}`\n\n", return_str));
-                            output.push_str(&format!("**Visibility:** {}\n\n", format_visibility(&method.visibility)));
-
-                            if let Some(summary) = &method.documentation.summary {
-                                output.push_str(&format!("{}\n\n", summary));
-                            }
-                        }
-                    }
-                }
-                Element::Function(func) => {
-                    let params: Vec<String> = func.signature.parameters.iter()
-                        .map(|p| {
-                            let type_str = p.type_annotation.as_deref().unwrap_or("_");
-                            format!("{}: {}", p.name, type_str)
-                        })
-                        .collect();
-                    let return_str = func.signature.return_type.as_deref().unwrap_or("void");
-
-                    output.push_str(&format!("## Function: `{}({})`\n\n", func.name, params.join(", ")));
-                    output.push_str(&format!("**Returns:** `{}`\n\n", return_str));
-                    output.push_str(&format!("**Visibility:** {}\n\n", format_visibility(&func.visibility)));
-
-                    if let Some(summary) = &func.documentation.summary {
-                        output.push_str(&format!("{}\n\n", summary));
-                    }
-                }
-            }
-
-            output.push_str("---\n\n");
-        }
-
-        Ok(output)
+        generate_file_md(blueprint)
     }
 }
 
-fn format_visibility(vis: &Visibility) -> &'static str {
-    match vis {
-        Visibility::Public => "public",
-        Visibility::Private => "private",
-        Visibility::Protected => "protected",
-        Visibility::Internal => "internal",
+/// Generate markdown for a single file (.rs.md)
+pub fn generate_file_md(blueprint: &Blueprint) -> Result<String, String> {
+    let mut output = String::new();
+
+    // Header
+    output.push_str(&format!(
+        "# {}\n\n",
+        blueprint
+            .source_path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("Unknown")
+    ));
+
+    output.push_str(&format!("> Language: **{}**\n\n", blueprint.language));
+    output.push_str(&format!(
+        "> Source: `{}`\n\n",
+        blueprint.source_path.display()
+    ));
+
+    output.push_str("---\n\n");
+
+    // Mermaid Class Diagram
+    if let Some(mermaid) = generate_mermaid_diagram(blueprint) {
+        output.push_str("## Class Diagram\n\n");
+        output.push_str("```mermaid\n");
+        output.push_str(&mermaid);
+        output.push_str("```\n\n");
     }
+
+    Ok(output)
+}
+
+/// Generate markdown for the root STRUCT.md (module/folder overview)
+pub fn generate_index_md(modules: &[&str]) -> Result<String, String> {
+    let mut output = String::new();
+
+    output.push_str("# Project Architecture\n\n");
+    output.push_str("## Module Dependencies\n\n");
+
+    // Simple folder graph (can be enhanced with real dependency analysis)
+    output.push_str("```mermaid\n");
+    output.push_str("graph TD\n");
+    output.push_str("    main[main.rs]\n");
+    output.push_str("    cli[cli.rs]\n");
+    output.push_str("    engine[engine.rs]\n");
+    output.push_str("    ir[ir.rs]\n");
+    output.push_str("    drivers[drivers/]\n");
+    output.push_str("    io[io/]\n");
+    output.push_str("    discovery[discovery.rs]\n");
+    output.push_str("\n");
+    output.push_str("    main --> cli\n");
+    output.push_str("    cli --> engine\n");
+    output.push_str("    engine --> drivers\n");
+    output.push_str("    engine --> ir\n");
+    output.push_str("    engine --> io\n");
+    output.push_str("    engine --> discovery\n");
+    output.push_str("```\n\n");
+
+    output.push_str("---\n\n");
+    output.push_str("## Files\n\n");
+
+    for module in modules {
+        output.push_str(&format!("- [{}]({})\n", module, format_module_path(module)));
+    }
+
+    Ok(output)
+}
+
+fn format_module_path(module: &str) -> String {
+    format!("src/{}.md", module.replace("::", "/"))
 }
 
 fn generate_mermaid_diagram(blueprint: &Blueprint) -> Option<String> {
@@ -139,13 +104,19 @@ fn generate_mermaid_diagram(blueprint: &Blueprint) -> Option<String> {
                 for prop in &class.properties {
                     let visibility_symbol = mermaid_visibility(&prop.visibility);
                     let type_str = prop.type_annotation.as_deref().unwrap_or("_");
-                    diagram.push_str(&format!("        {}{} {}\n", visibility_symbol, prop.name, type_str));
+                    diagram.push_str(&format!(
+                        "        {}{} {}\n",
+                        visibility_symbol, prop.name, type_str
+                    ));
                 }
 
                 // Methods
                 for method in &class.methods {
                     let visibility_symbol = mermaid_visibility(&method.visibility);
-                    let params: Vec<String> = method.signature.parameters.iter()
+                    let params: Vec<String> = method
+                        .signature
+                        .parameters
+                        .iter()
                         .filter(|p| p.name != "self")
                         .map(|p| {
                             let type_str = p.type_annotation.as_deref().unwrap_or("_");
@@ -153,10 +124,11 @@ fn generate_mermaid_diagram(blueprint: &Blueprint) -> Option<String> {
                         })
                         .collect();
                     let return_str = method.signature.return_type.as_deref().unwrap_or("void");
-                    
-                    diagram.push_str(&format!("        {}{}({}) {}\n", 
-                        visibility_symbol, 
-                        method.name, 
+
+                    diagram.push_str(&format!(
+                        "        {}{}({}) {}\n",
+                        visibility_symbol,
+                        method.name,
                         params.join(", "),
                         return_str
                     ));
