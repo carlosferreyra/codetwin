@@ -85,7 +85,7 @@ fn extract_struct(node: &Node, source: &str) -> Result<Class, String> {
     // The struct name is typically the first identifier child
     let mut name = String::new();
     let mut cursor = node.walk();
-    
+
     for child in node.children(&mut cursor) {
         if child.kind() == "type_identifier" {
             name = child
@@ -95,7 +95,7 @@ fn extract_struct(node: &Node, source: &str) -> Result<Class, String> {
             break;
         }
     }
-    
+
     if name.is_empty() {
         return Err("Could not find struct name".to_string());
     }

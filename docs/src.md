@@ -4,6 +4,8 @@
 
 ## Files
 
+- `src/cli.rs`
+- `src/config.rs`
 - `src/engine.rs`
 - `src/ir.rs`
 
@@ -13,16 +15,33 @@
 
 ```mermaid
 classDiagram
+    %% File: src/cli.rs
+    class Cli {
+    }
+    %% File: src/config.rs
+    class Config {
+    }
     %% File: src/engine.rs
     class SyncEngine {
-        +new() Self
-        +sync() Result<(), String>
     }
     %% File: src/ir.rs
     class Blueprint {
-        +source_path PathBuf
-        +language String
-        +elements Vec<Element>
+    }
+    class Module {
+    }
+    class Class {
+    }
+    class Function {
+    }
+    class Method {
+    }
+    class Property {
+    }
+    class Signature {
+    }
+    class Parameter {
+    }
+    class Documentation {
     }
 ```
 

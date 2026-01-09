@@ -1,7 +1,10 @@
+use crate::config::{Config, struct_md_template};
+use crate::discovery;
+use crate::drivers;
 use crate::drivers::markdown::{generate_file_md, generate_index_md};
+use crate::drivers::trait_def::Driver;
 /// The "Brain" - SyncEngine and the Loop logic
 use crate::ir::*;
-use crate::config::{Config, struct_md_template};
 use std::fs;
 use std::path::PathBuf;
 
@@ -17,18 +20,53 @@ impl SyncEngine {
     }
 
     pub fn sync(&self) -> Result<(), String> {
-        // Generate one diagram per folder + index
-        println!("📦 Creating mock Blueprints for demonstration...");
+        // Load config
+        let config = Config::load("codetwin.toml")?;
+        println!("📖 Config loaded from codetwin.toml");
 
-        let blueprints = vec![
-            self.create_mock_engine_blueprint(),
-            self.create_mock_driver_blueprint(),
-            self.create_mock_ir_blueprint(),
-        ];
+        // Discover Rust files
+        println!("🔍 Discovering source files...");
+        let files = discovery::find_rust_files(&config.source_dirs)?;
+        println!("   Found {} Rust files", files.len());
 
-        let output_dir = PathBuf::from("docs");
-        println!("📝 Creating docs directory...");
-        fs::create_dir_all(&output_dir).map_err(|e| format!("Failed to create docs dir: {}", e))?;
+        // Parse each file
+        println!("🔨 Parsing Rust code...");
+        let mut blueprints: Vec<Blueprint> = Vec::new();
+
+        for file_path in files {
+            let source = fs::read_to_string(&file_path)
+                .map_err(|e| format!("Failed to read {}: {}", file_path.display(), e))?;
+
+            // Get the appropriate driver for the file
+            if let Some(driver) = drivers::get_driver_for_file(&file_path) {
+                match driver.parse(&source) {
+                    Ok(mut blueprint) => {
+                        blueprint.source_path = file_path.clone();
+                        if !blueprint.elements.is_empty() {
+                            println!(
+                                "   ✓ Parsed {} ({} items)",
+                                file_path.display(),
+                                blueprint.elements.len()
+                            );
+                            blueprints.push(blueprint);
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("   ⚠ Failed to parse {}: {}", file_path.display(), e);
+                    }
+                }
+            }
+        }
+
+        if blueprints.is_empty() {
+            return Err("No elements found in any source files".to_string());
+        }
+
+        // Create output directory
+        let output_dir = PathBuf::from(&config.output_dir);
+        println!("📝 Creating {} directory...", config.output_dir);
+        fs::create_dir_all(&output_dir)
+            .map_err(|e| format!("Failed to create output dir: {}", e))?;
 
         // Group blueprints by folder
         use std::collections::BTreeMap;
@@ -54,7 +92,7 @@ impl SyncEngine {
             let file_name = format!("{}.md", folder);
             let file_path = output_dir.join(&file_name);
 
-            println!("  → Generating {}", file_name);
+            println!("   → Generating {}", file_name);
             let markdown = generate_file_md(&folder_bps)
                 .map_err(|e| format!("Failed to generate markdown: {}", e))?;
 
@@ -64,16 +102,16 @@ impl SyncEngine {
 
         // Generate index with folder dependency graph
         let folders: Vec<&String> = folder_blueprints.keys().collect();
-        println!("📝 Generating index (STRUCT.md)...");
+        println!("📝 Generating {} index...", config.main_diagram);
         let index = generate_index_md(&folders.iter().map(|s| s.as_str()).collect::<Vec<_>>())
             .map_err(|e| format!("Failed to generate index: {}", e))?;
 
-        let index_path = output_dir.join("STRUCT.md");
+        let index_path = output_dir.join(&config.main_diagram);
         fs::write(&index_path, index).map_err(|e| format!("Failed to write index: {}", e))?;
 
         println!(
-            "✅ Successfully generated documentation in {}",
-            output_dir.display()
+            "\n✅ Successfully generated documentation in {}/",
+            config.output_dir
         );
         println!("   Files created:");
         println!("   - {}", index_path.display());
@@ -123,137 +161,5 @@ impl SyncEngine {
 
     pub fn list(&self) -> Result<(), String> {
         Err("list: Not implemented yet".to_string())
-    }
-
-    // Mock Blueprints for demonstration
-    fn create_mock_engine_blueprint(&self) -> Blueprint {
-        Blueprint {
-            source_path: PathBuf::from("src/engine.rs"),
-            language: "rust".to_string(),
-            elements: vec![Element::Class(Class {
-                name: "SyncEngine".to_string(),
-                visibility: Visibility::Public,
-                methods: vec![
-                    Method {
-                        name: "new".to_string(),
-                        visibility: Visibility::Public,
-                        is_static: true,
-                        signature: Signature {
-                            parameters: vec![],
-                            return_type: Some("Self".to_string()),
-                        },
-                        documentation: Documentation {
-                            summary: Some("Creates a new SyncEngine instance".to_string()),
-                            description: None,
-                            examples: vec![],
-                        },
-                    },
-                    Method {
-                        name: "sync".to_string(),
-                        visibility: Visibility::Public,
-                        is_static: false,
-                        signature: Signature {
-                            parameters: vec![],
-                            return_type: Some("Result<(), String>".to_string()),
-                        },
-                        documentation: Documentation {
-                            summary: Some("Generates documentation from source".to_string()),
-                            description: None,
-                            examples: vec![],
-                        },
-                    },
-                ],
-                properties: vec![],
-                documentation: Documentation {
-                    summary: Some("Core synchronization engine".to_string()),
-                    description: None,
-                    examples: vec![],
-                },
-            })],
-        }
-    }
-
-    fn create_mock_driver_blueprint(&self) -> Blueprint {
-        Blueprint {
-            source_path: PathBuf::from("src/drivers/mod.rs"),
-            language: "rust".to_string(),
-            elements: vec![Element::Class(Class {
-                name: "Driver".to_string(),
-                visibility: Visibility::Public,
-                methods: vec![Method {
-                    name: "parse".to_string(),
-                    visibility: Visibility::Public,
-                    is_static: false,
-                    signature: Signature {
-                        parameters: vec![Parameter {
-                            name: "content".to_string(),
-                            type_annotation: Some("&str".to_string()),
-                            default_value: None,
-                        }],
-                        return_type: Some("Result<Blueprint, String>".to_string()),
-                    },
-                    documentation: Documentation {
-                        summary: Some("Parses source code into Blueprint".to_string()),
-                        description: None,
-                        examples: vec![],
-                    },
-                }],
-                properties: vec![],
-                documentation: Documentation {
-                    summary: Some("Adapter trait for language-specific parsing".to_string()),
-                    description: None,
-                    examples: vec![],
-                },
-            })],
-        }
-    }
-
-    fn create_mock_ir_blueprint(&self) -> Blueprint {
-        Blueprint {
-            source_path: PathBuf::from("src/ir.rs"),
-            language: "rust".to_string(),
-            elements: vec![Element::Class(Class {
-                name: "Blueprint".to_string(),
-                visibility: Visibility::Public,
-                methods: vec![],
-                properties: vec![
-                    Property {
-                        name: "source_path".to_string(),
-                        visibility: Visibility::Public,
-                        type_annotation: Some("PathBuf".to_string()),
-                        documentation: Documentation {
-                            summary: None,
-                            description: None,
-                            examples: vec![],
-                        },
-                    },
-                    Property {
-                        name: "language".to_string(),
-                        visibility: Visibility::Public,
-                        type_annotation: Some("String".to_string()),
-                        documentation: Documentation {
-                            summary: None,
-                            description: None,
-                            examples: vec![],
-                        },
-                    },
-                    Property {
-                        name: "elements".to_string(),
-                        visibility: Visibility::Public,
-                        type_annotation: Some("Vec<Element>".to_string()),
-                        documentation: Documentation {
-                            summary: None,
-                            description: None,
-                            examples: vec![],
-                        },
-                    },
-                ],
-                documentation: Documentation {
-                    summary: Some("Universal intermediate representation".to_string()),
-                    description: None,
-                    examples: vec![],
-                },
-            })],
-        }
     }
 }
