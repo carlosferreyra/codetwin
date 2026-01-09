@@ -20,3 +20,22 @@
 4. [ ] Register `diagram_first` formatter in `formatters::get_formatter()` factory
 5. [ ] Add unit test: verify diagram_first produces diagram blocks and minimal text
 6. [ ] Update README with `diagram_first` use case and sample output
+
+## Bidirectional Sync (Docs -> Code)
+
+1. [ ] Define a layout-agnostic sync block format (structured, marked section) for docs -> code
+2. [ ] Emit the sync block from every formatter (including proposed ones) alongside human-friendly
+       layout
+3. [ ] Implement importer that reads only the sync block to rebuild Blueprints (ignores
+       layout-specific prose)
+4. [ ] Add tests covering round-trip for multiple formatters (folder_markdown, mirror_tree,
+       readme_append)
+5. [ ] Document the sync block contract and markers in README and CLI help
+
+## Subcommands
+
+- watch: Not implemented (returns error stub)
+- sync: Implemented (code -> docs via formatter selection; docs -> code pending)
+- check: Not implemented (returns error stub)
+- init: Implemented (writes config, docs folder, template main diagram)
+- list: Not implemented (returns error stub)
