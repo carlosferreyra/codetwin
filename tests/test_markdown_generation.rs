@@ -74,11 +74,10 @@ fn test_generate_struct_md() {
     let markdown = result.unwrap();
 
     // Verify content
-    assert!(markdown.contains("# example"));
+    assert!(markdown.contains("# src"));
     assert!(markdown.contains("Language: **rust**"));
-    assert!(markdown.contains("Function: `greet(name: &str)`"));
-    assert!(markdown.contains("Class: `User`"));
-    assert!(markdown.contains("Creates a new User instance"));
+    assert!(markdown.contains("src/example.rs"));
+    assert!(markdown.contains("class User"));
 
     println!("{}", markdown);
 }

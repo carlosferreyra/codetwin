@@ -1,8 +1,7 @@
 use crate::config::{Config, struct_md_template};
 use crate::discovery;
 use crate::drivers;
-use crate::drivers::markdown::{generate_file_md, generate_index_md};
-use crate::drivers::trait_def::Driver;
+use crate::formatters;
 /// The "Brain" - SyncEngine and the Loop logic
 use crate::ir::*;
 use std::fs;
@@ -62,65 +61,28 @@ impl SyncEngine {
             return Err("No elements found in any source files".to_string());
         }
 
-        // Create output directory
         let output_dir = PathBuf::from(&config.output_dir);
         println!("📝 Creating {} directory...", config.output_dir);
         fs::create_dir_all(&output_dir)
             .map_err(|e| format!("Failed to create output dir: {}", e))?;
 
-        // Group blueprints by folder
-        use std::collections::BTreeMap;
-        let mut folder_blueprints: BTreeMap<String, Vec<Blueprint>> = BTreeMap::new();
+        let formatter = formatters::get_formatter(&config)?;
+        let outputs = formatter
+            .format(&blueprints)
+            .map_err(|e| format!("Failed to format documentation: {}", e))?;
 
-        for blueprint in blueprints.iter().cloned() {
-            let folder = blueprint
-                .source_path
-                .parent()
-                .and_then(|p| p.file_name())
-                .and_then(|f| f.to_str())
-                .unwrap_or("root")
-                .to_string();
-
-            folder_blueprints
-                .entry(folder)
-                .or_insert_with(Vec::new)
-                .push(blueprint);
-        }
-
-        // Generate one .md file per folder
-        for (folder, folder_bps) in folder_blueprints.iter() {
-            let file_name = format!("{}.md", folder);
+        println!("📝 Writing formatted outputs...");
+        for (file_name, content) in outputs {
             let file_path = output_dir.join(&file_name);
-
-            println!("   → Generating {}", file_name);
-            let markdown = generate_file_md(&folder_bps)
-                .map_err(|e| format!("Failed to generate markdown: {}", e))?;
-
-            fs::write(&file_path, markdown)
+            fs::write(&file_path, content)
                 .map_err(|e| format!("Failed to write {}: {}", file_path.display(), e))?;
+            println!("   - {}", file_path.display());
         }
-
-        // Generate index with folder dependency graph
-        let folders: Vec<&String> = folder_blueprints.keys().collect();
-        println!("📝 Generating {} index...", config.main_diagram);
-        let index = generate_index_md(&folders.iter().map(|s| s.as_str()).collect::<Vec<_>>())
-            .map_err(|e| format!("Failed to generate index: {}", e))?;
-
-        let index_path = output_dir.join(&config.main_diagram);
-        fs::write(&index_path, index).map_err(|e| format!("Failed to write index: {}", e))?;
 
         println!(
             "\n✅ Successfully generated documentation in {}/",
             config.output_dir
         );
-        println!("   Files created:");
-        println!("   - {}", index_path.display());
-        for folder in folder_blueprints.keys() {
-            println!(
-                "   - {}",
-                output_dir.join(format!("{}.md", folder)).display()
-            );
-        }
 
         Ok(())
     }

@@ -28,4 +28,3 @@ classDiagram
     class TypeScriptDriver {
     }
 ```
-

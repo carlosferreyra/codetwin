@@ -37,6 +37,20 @@ cargo run
 
 As features land, the CLI will expose subcommands using `clap`.
 
+## Formatter layouts
+
+- folder_markdown (Available): One Markdown per source folder plus an index file; default layout.
+- mirror_tree (Proposed): Mirror `src/` structure into `docs/` with one Markdown per source file or
+  module for path parity.
+- readme_append (Proposed): Append a generated section into README with markers to protect
+  hand-written content.
+- per_language (Proposed): Group outputs by language first, then folders for polyglot repos.
+- site_bundle (Proposed): Emit Markdown plus minimal static-site-friendly index/metadata (e.g.,
+  mkdocs/sidebar) without bundling a generator.
+- api_ref_only (Proposed): Produce lean API signature references without diagrams for compact docs.
+- diagram_first (Proposed): Emit diagram-focused summaries (Mermaid/PlantUML blocks) with minimal
+  prose.
+
 ## Development
 
 - Rust edition: 2024

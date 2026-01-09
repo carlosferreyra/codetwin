@@ -8,6 +8,7 @@ pub struct Config {
     pub output_dir: String,
     pub source_dirs: Vec<String>,
     pub main_diagram: String,
+    pub formatter: String,
     pub watch_pattern: String,
 }
 
@@ -17,6 +18,7 @@ impl Default for Config {
             output_dir: "docs".to_string(),
             source_dirs: vec!["src".to_string()],
             main_diagram: "STRUCT.md".to_string(),
+            formatter: "folder_markdown".to_string(),
             watch_pattern: "**/*.rs".to_string(),
         }
     }
@@ -43,10 +45,13 @@ source_dirs = [{}]
 # Main diagram filename
 main_diagram = "{}"
 
+# Formatter strategy (e.g. folder_markdown, one_per_file)
+formatter = "{}"
+
 # Watch pattern for file monitoring
 watch_pattern = "{}"
 "#,
-            self.output_dir, source_dirs, self.main_diagram, self.watch_pattern
+            self.output_dir, source_dirs, self.main_diagram, self.formatter, self.watch_pattern
         )
     }
 
@@ -103,6 +108,12 @@ watch_pattern = "{}"
             .unwrap_or("STRUCT.md")
             .to_string();
 
+        let formatter = codetwin
+            .get("formatter")
+            .and_then(|v| v.as_str())
+            .unwrap_or("folder_markdown")
+            .to_string();
+
         let watch_pattern = codetwin
             .get("watch_pattern")
             .and_then(|v| v.as_str())
@@ -113,6 +124,7 @@ watch_pattern = "{}"
             output_dir,
             source_dirs,
             main_diagram,
+            formatter,
             watch_pattern,
         })
     }
