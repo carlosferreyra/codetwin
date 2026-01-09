@@ -20,7 +20,11 @@ mod tests {
         let cfg = Config::load("codetwin.toml").expect("Failed to load config");
         let files = find_rust_files(&cfg.source_dirs).expect("Failed to find files");
         assert!(!files.is_empty(), "Should find .rs files");
-        println!("✅ Found {} Rust files in {:?}", files.len(), cfg.source_dirs);
+        println!(
+            "✅ Found {} Rust files in {:?}",
+            files.len(),
+            cfg.source_dirs
+        );
         for f in files.iter().take(5) {
             println!("  - {}", f.display());
         }

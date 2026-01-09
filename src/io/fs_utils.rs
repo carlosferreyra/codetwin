@@ -1,5 +1,4 @@
 /// File System abstraction - Safe writing, hashing for loop protection
-
 use std::path::Path;
 
 pub fn safe_read(_path: &Path) -> Result<String, String> {

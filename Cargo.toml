@@ -1,11 +1,14 @@
 [package]
-  description = "A bidirectional documentation and code synchronization tool."
-  edition     = "2024"
-  license     = "MIT"
-  name        = "codetwin"
-  readme      = "README.md"
-  repository  = "https://github.com/carlosferreyra/codetwin"
-  version     = "0.1.0"
+  categories    = ["command-line-utilities", "development-tools"]
+  description   = "A bidirectional documentation and code synchronization tool."
+  documentation = "https://docs.rs/codetwin"
+  edition       = "2024"
+  keywords      = ["architecture", "cli", "docs", "documentation", "sync"]
+  license       = "MIT"
+  name          = "codetwin"
+  readme        = "README.md"
+  repository    = "https://github.com/carlosferreyra/codetwin"
+  version       = "0.1.0"
 
 [dependencies]
   clap             = { version = "4.5", features = ["derive"] }

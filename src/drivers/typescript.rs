@@ -1,7 +1,6 @@
-/// Tree-sitter logic for TypeScript
-
-use crate::ir::Blueprint;
 use super::trait_def::Driver;
+/// Tree-sitter logic for TypeScript
+use crate::ir::Blueprint;
 
 pub struct TypeScriptDriver;
 

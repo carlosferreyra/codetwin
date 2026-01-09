@@ -32,10 +32,7 @@ impl Formatter for FolderMarkdownFormatter {
                 .unwrap_or("root")
                 .to_string();
 
-            folder_blueprints
-                .entry(folder)
-                .or_insert_with(Vec::new)
-                .push(blueprint);
+            folder_blueprints.entry(folder).or_default().push(blueprint);
         }
 
         let mut outputs = Vec::new();
@@ -136,7 +133,10 @@ fn generate_mermaid_diagram_multi(blueprints: &[Blueprint]) -> Option<String> {
     let mut diagram = String::from("classDiagram\n");
 
     for blueprint in blueprints {
-        diagram.push_str(&format!("    %% File: {}\n", blueprint.source_path.display()));
+        diagram.push_str(&format!(
+            "    %% File: {}\n",
+            blueprint.source_path.display()
+        ));
 
         for element in &blueprint.elements {
             if let Element::Class(class) = element {

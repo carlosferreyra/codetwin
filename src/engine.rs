@@ -9,6 +9,12 @@ use std::path::PathBuf;
 
 pub struct SyncEngine;
 
+impl Default for SyncEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SyncEngine {
     pub fn new() -> Self {
         SyncEngine

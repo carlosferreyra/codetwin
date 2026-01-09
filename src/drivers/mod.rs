@@ -1,8 +1,8 @@
-pub mod trait_def;
-pub mod rust;
-pub mod python;
-pub mod typescript;
 pub mod markdown;
+pub mod python;
+pub mod rust;
+pub mod trait_def;
+pub mod typescript;
 
 use std::path::Path;
 use trait_def::Driver;

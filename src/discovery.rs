@@ -58,7 +58,7 @@ fn should_skip(path: &Path) -> bool {
 
     path.file_name()
         .and_then(|name| name.to_str())
-        .map(|name| skip_dirs.iter().any(|skip| name == *skip) || name.starts_with('.'))
+        .map(|name| skip_dirs.contains(&name) || name.starts_with('.'))
         .unwrap_or(false)
 }
 

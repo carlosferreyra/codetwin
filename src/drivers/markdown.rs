@@ -2,6 +2,7 @@ use super::trait_def::Driver;
 use crate::formatters::folder_markdown::generate_file_md;
 /// Markdown generator - Blueprint → file-level .rs.md with class diagram
 use crate::ir::Blueprint;
+use std::slice;
 
 pub struct MarkdownDriver;
 
@@ -12,6 +13,6 @@ impl Driver for MarkdownDriver {
 
     fn generate(&self, blueprint: &Blueprint) -> Result<String, String> {
         // Wrap single blueprint in a slice
-        generate_file_md(&[blueprint.clone()])
+        generate_file_md(slice::from_ref(blueprint))
     }
 }

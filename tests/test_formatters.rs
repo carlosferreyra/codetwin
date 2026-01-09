@@ -44,8 +44,10 @@ fn sample_blueprint(path: &str) -> Blueprint {
 
 #[test]
 fn folder_markdown_formatter_outputs_folder_and_index() {
-    let mut config = Config::default();
-    config.formatter = "folder_markdown".to_string();
+    let config = Config {
+        formatter: "folder_markdown".to_string(),
+        ..Config::default()
+    };
 
     let formatter = get_formatter(&config).expect("formatter lookup");
     let blueprints = vec![sample_blueprint("src/example.rs")];
@@ -69,8 +71,10 @@ fn folder_markdown_formatter_outputs_folder_and_index() {
 
 #[test]
 fn one_per_file_formatter_emits_one_file_per_blueprint() {
-    let mut config = Config::default();
-    config.formatter = "one_per_file".to_string();
+    let config = Config {
+        formatter: "one_per_file".to_string(),
+        ..Config::default()
+    };
 
     let formatter = get_formatter(&config).expect("formatter lookup");
     let blueprints = vec![

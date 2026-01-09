@@ -54,19 +54,13 @@ fn parse_rust_code(source: &str) -> Result<Blueprint, String> {
             }
             "impl_item" => {
                 // Will be handled separately and attached to classes
-                if let Ok(methods) = extract_impl_methods(&child, source) {
-                    // Find corresponding class and add methods
-                    if let Some(class_name) = get_impl_struct_name(&child, source) {
-                        if let Some(Element::Class(class)) = elements.iter_mut().find(|e| {
-                            if let Element::Class(c) = e {
-                                c.name == class_name
-                            } else {
-                                false
-                            }
-                        }) {
-                            class.methods.extend(methods);
-                        }
-                    }
+                if let Ok(methods) = extract_impl_methods(&child, source)
+                    && let Some(class_name) = get_impl_struct_name(&child, source)
+                    && let Some(Element::Class(class)) = elements
+                        .iter_mut()
+                        .find(|e| matches!(e, Element::Class(c) if c.name == class_name))
+                {
+                    class.methods.extend(methods);
                 }
             }
             _ => {}
@@ -131,19 +125,19 @@ fn extract_impl_methods(node: &Node, source: &str) -> Result<Vec<Method>, String
     let mut cursor = node.walk();
 
     for child in node.children(&mut cursor) {
-        if child.kind() == "function_item" {
-            if let Ok(sig) = extract_function_signature(&child, source) {
-                let name = get_node_text(&child, source, "name").unwrap_or_default();
-                let visibility = extract_visibility(&child, source);
+        if child.kind() == "function_item"
+            && let Ok(sig) = extract_function_signature(&child, source)
+        {
+            let name = get_node_text(&child, source, "name").unwrap_or_default();
+            let visibility = extract_visibility(&child, source);
 
-                methods.push(Method {
-                    name,
-                    visibility,
-                    is_static: false, // Can be refined to detect &self vs no self
-                    signature: sig,
-                    documentation: extract_doc_comment(&child, source),
-                });
-            }
+            methods.push(Method {
+                name,
+                visibility,
+                is_static: false, // Can be refined to detect &self vs no self
+                signature: sig,
+                documentation: extract_doc_comment(&child, source),
+            });
         }
     }
 
@@ -167,10 +161,10 @@ fn extract_struct_fields(node: &Node, source: &str) -> Vec<Property> {
     let mut cursor = node.walk();
 
     for child in node.children(&mut cursor) {
-        if child.kind() == "field_declaration" {
-            if let Ok(prop) = extract_field(&child, source) {
-                properties.push(prop);
-            }
+        if child.kind() == "field_declaration"
+            && let Ok(prop) = extract_field(&child, source)
+        {
+            properties.push(prop);
         }
     }
 
@@ -218,10 +212,10 @@ fn extract_parameters(node: &Node, source: &str) -> Vec<Parameter> {
     let mut cursor = node.walk();
 
     for child in node.children(&mut cursor) {
-        if child.kind() == "parameter" {
-            if let Ok(param) = extract_parameter(&child, source) {
-                parameters.push(param);
-            }
+        if child.kind() == "parameter"
+            && let Ok(param) = extract_parameter(&child, source)
+        {
+            parameters.push(param);
         }
     }
 
@@ -263,19 +257,16 @@ fn extract_return_type(node: &Node, source: &str) -> Option<String> {
 fn extract_visibility(node: &Node, source: &str) -> Visibility {
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
-        match child.kind() {
-            "pub" => {
-                // Check for pub(crate) or pub(super)
-                if let Ok(text) = child.utf8_text(source.as_bytes()) {
-                    if text.contains("(crate)") {
-                        return Visibility::Internal;
-                    } else if text.contains("(super)") {
-                        return Visibility::Protected;
-                    }
+        if child.kind() == "pub" {
+            // Check for pub(crate) or pub(super)
+            if let Ok(text) = child.utf8_text(source.as_bytes()) {
+                if text.contains("(crate)") {
+                    return Visibility::Internal;
+                } else if text.contains("(super)") {
+                    return Visibility::Protected;
                 }
-                return Visibility::Public;
             }
-            _ => {}
+            return Visibility::Public;
         }
     }
     Visibility::Private

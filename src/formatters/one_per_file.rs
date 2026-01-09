@@ -3,6 +3,12 @@ use crate::ir::Blueprint;
 
 pub struct OnePerFileFormatter;
 
+impl Default for OnePerFileFormatter {
+    fn default() -> Self {
+        OnePerFileFormatter
+    }
+}
+
 impl OnePerFileFormatter {
     pub fn new() -> Self {
         OnePerFileFormatter
