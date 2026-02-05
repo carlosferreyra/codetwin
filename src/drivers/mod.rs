@@ -1,10 +1,12 @@
 pub mod markdown;
 pub mod python;
 pub mod rust;
+pub mod terminology;
 pub mod trait_def;
 pub mod typescript;
 
 use std::path::Path;
+pub use terminology::LanguageTerminology;
 use trait_def::Driver;
 
 /// Factory: get_driver_for_file(path) -> Box<dyn Driver>

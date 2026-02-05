@@ -1,13 +1,14 @@
 use super::trait_def::Layout;
 use crate::ir::{Blueprint, Element};
-use petgraph::graph::DiGraph;
+use anyhow::Result;
 use petgraph::algo::is_cyclic_directed;
+use petgraph::graph::DiGraph;
 use std::collections::HashMap;
 
 pub struct DependencyGraphLayout;
 
 impl Layout for DependencyGraphLayout {
-    fn format(&self, blueprints: &[Blueprint]) -> Result<Vec<(String, String)>, String> {
+    fn format(&self, blueprints: &[Blueprint]) -> Result<Vec<(String, String)>> {
         let mut graph = DiGraph::new();
         let mut node_indices = HashMap::new();
 
@@ -44,7 +45,9 @@ impl Layout for DependencyGraphLayout {
         // Generate markdown output
         let content = format!(
             "{}\n\n{}\n\n{}",
-            mermaid_diagram, module_list, generate_footer(has_cycles)
+            mermaid_diagram,
+            module_list,
+            generate_footer(has_cycles)
         );
 
         Ok(vec![("architecture.md".to_string(), content)])
@@ -178,7 +181,10 @@ mod tests {
 
     #[test]
     fn test_extract_module_name() {
-        assert_eq!(extract_module_name(&PathBuf::from("src/engine.rs")), "engine");
+        assert_eq!(
+            extract_module_name(&PathBuf::from("src/engine.rs")),
+            "engine"
+        );
         assert_eq!(extract_module_name(&PathBuf::from("main.rs")), "main");
         assert_eq!(
             extract_module_name(&PathBuf::from("src/drivers/rust.rs")),
