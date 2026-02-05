@@ -1,5 +1,6 @@
 use super::Layout;
 use crate::ir::Blueprint;
+use anyhow::Result;
 
 pub struct OnePerFileLayout;
 
@@ -16,7 +17,7 @@ impl OnePerFileLayout {
 }
 
 impl Layout for OnePerFileLayout {
-    fn format(&self, blueprints: &[Blueprint]) -> Result<Vec<(String, String)>, String> {
+    fn format(&self, blueprints: &[Blueprint]) -> Result<Vec<(String, String)>> {
         let mut outputs = Vec::new();
 
         for blueprint in blueprints {

@@ -1,40 +1,46 @@
 use super::trait_def::Driver;
+use crate::drivers::LanguageTerminology;
 /// Tree-sitter logic for Rust
 use crate::ir::{
     Blueprint, Class, Documentation, Element, Function, Method, Parameter, Property, Signature,
     Visibility,
 };
+use anyhow::{anyhow, Context, Result};
 use std::path::PathBuf;
 use tree_sitter::{Node, Parser};
 
 pub struct RustDriver;
 
 impl Driver for RustDriver {
-    fn parse(&self, content: &str) -> Result<Blueprint, String> {
+    fn parse(&self, content: &str) -> Result<Blueprint> {
         parse_rust_code(content)
     }
 
-    fn generate(&self, _blueprint: &Blueprint) -> Result<String, String> {
-        Err(
+    fn generate(&self, _blueprint: &Blueprint) -> Result<String> {
+        Err(anyhow!(
             "RustDriver::generate: Not implemented yet (Rust is a source, not a target)"
-                .to_string(),
-        )
+        ))
+    }
+
+    /// Rust-specific terminology
+    fn terminology(&self) -> LanguageTerminology {
+        LanguageTerminology::rust()
     }
 }
 
 /// Parse Rust source code and extract classes/functions
-fn parse_rust_code(source: &str) -> Result<Blueprint, String> {
+fn parse_rust_code(source: &str) -> Result<Blueprint> {
     let mut parser = Parser::new();
     // Get the Rust language from tree_sitter_rust
     let language = tree_sitter_rust::LANGUAGE.into();
 
     parser
         .set_language(&language)
-        .map_err(|_| "Failed to set Rust language".to_string())?;
+        .context("Failed to set Rust language")?;
 
     let tree = parser
         .parse(source, None)
-        .ok_or("Failed to parse Rust code")?;
+        .ok_or_else(|| anyhow!("Failed to parse Rust code"))?;
 
     let mut elements = Vec::new();
     let mut dependencies = Vec::new();
@@ -96,7 +102,10 @@ fn extract_imports(node: &Node, source: &str) -> Result<Vec<String>, String> {
         .unwrap_or_default();
 
     // Parse text like "use crate::ir::*;" or "use std::path::PathBuf;"
-    if let Some(use_path) = text.strip_prefix("use ").map(|s| s.trim_end_matches(';').trim()) {
+    if let Some(use_path) = text
+        .strip_prefix("use ")
+        .map(|s| s.trim_end_matches(';').trim())
+    {
         // Extract the root module (e.g., "crate", "std", "serde")
         if let Some(root) = use_path.split("::").next() {
             if root != "crate" && root != "self" {
@@ -116,7 +125,7 @@ fn extract_imports(node: &Node, source: &str) -> Result<Vec<String>, String> {
 }
 
 /// Extract struct definition as Class
-fn extract_struct(node: &Node, source: &str) -> Result<Class, String> {
+fn extract_struct(node: &Node, source: &str) -> Result<Class> {
     // The struct name is typically the first identifier child
     let mut name = String::new();
     let mut cursor = node.walk();
@@ -132,7 +141,7 @@ fn extract_struct(node: &Node, source: &str) -> Result<Class, String> {
     }
 
     if name.is_empty() {
-        return Err("Could not find struct name".to_string());
+        return Err(anyhow!("Could not find struct name"));
     }
 
     let visibility = extract_visibility(node, source);
@@ -147,7 +156,7 @@ fn extract_struct(node: &Node, source: &str) -> Result<Class, String> {
 }
 
 /// Extract function definition
-fn extract_function(node: &Node, source: &str) -> Result<Function, String> {
+fn extract_function(node: &Node, source: &str) -> Result<Function> {
     let name = get_node_text(node, source, "name")?;
     let visibility = extract_visibility(node, source);
     let signature = extract_function_signature(node, source)?;
@@ -161,7 +170,7 @@ fn extract_function(node: &Node, source: &str) -> Result<Function, String> {
 }
 
 /// Extract methods from impl block
-fn extract_impl_methods(node: &Node, source: &str) -> Result<Vec<Method>, String> {
+fn extract_impl_methods(node: &Node, source: &str) -> Result<Vec<Method>> {
     let mut methods = Vec::new();
     let mut cursor = node.walk();
 
@@ -172,10 +181,10 @@ fn extract_impl_methods(node: &Node, source: &str) -> Result<Vec<Method>, String
                 let visibility = extract_visibility(&child, source);
 
                 methods.push(Method {
-                name,
-                visibility,
-                is_static: false, // Can be refined to detect &self vs no self
-                signature: sig,
+                    name,
+                    visibility,
+                    is_static: false, // Can be refined to detect &self vs no self
+                    signature: sig,
                     documentation: extract_doc_comment(&child, source),
                 });
             }
@@ -213,7 +222,7 @@ fn extract_struct_fields(node: &Node, source: &str) -> Vec<Property> {
 }
 
 /// Extract single field as property
-fn extract_field(node: &Node, source: &str) -> Result<Property, String> {
+fn extract_field(node: &Node, source: &str) -> Result<Property> {
     let name = get_node_text(node, source, "name")?;
     let visibility = extract_visibility(node, source);
     let type_annotation = get_node_text(node, source, "type").ok();
@@ -227,7 +236,7 @@ fn extract_field(node: &Node, source: &str) -> Result<Property, String> {
 }
 
 /// Extract function signature (parameters and return type)
-fn extract_function_signature(node: &Node, source: &str) -> Result<Signature, String> {
+fn extract_function_signature(node: &Node, source: &str) -> Result<Signature> {
     let mut parameters = Vec::new();
     let mut cursor = node.walk();
 
@@ -264,7 +273,7 @@ fn extract_parameters(node: &Node, source: &str) -> Vec<Parameter> {
 }
 
 /// Extract single parameter
-fn extract_parameter(node: &Node, source: &str) -> Result<Parameter, String> {
+fn extract_parameter(node: &Node, source: &str) -> Result<Parameter> {
     let name = get_node_text(node, source, "pattern")?;
     let type_annotation = get_node_text(node, source, "type").ok();
 
@@ -324,7 +333,7 @@ fn extract_doc_comment(_node: &Node, _source: &str) -> Documentation {
 }
 
 /// Get text content of a specific child node by kind
-fn get_node_text(node: &Node, source: &str, target_kind: &str) -> Result<String, String> {
+fn get_node_text(node: &Node, source: &str, target_kind: &str) -> Result<String> {
     if target_kind.is_empty() {
         // Return the node itself
         return Ok(node
@@ -343,5 +352,5 @@ fn get_node_text(node: &Node, source: &str, target_kind: &str) -> Result<String,
         }
     }
 
-    Err(format!("Could not find {} in node", target_kind))
+    Err(anyhow!("Could not find {} in node", target_kind))
 }

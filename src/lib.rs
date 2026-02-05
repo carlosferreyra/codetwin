@@ -1,3 +1,7 @@
+//! CodeTwin - Code to Diagram Generator
+//! Using anyhow for error handling
+pub use anyhow::{Context, Result};
+
 /// Exposes modules so 'tests/' can see them
 pub mod cli;
 pub mod config;

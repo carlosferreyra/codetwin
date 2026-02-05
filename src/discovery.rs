@@ -1,24 +1,38 @@
+use anyhow::{anyhow, Result};
+use glob::Pattern;
 /// File discovery - find source files based on directory patterns
-use std::fs;
 use std::path::{Path, PathBuf};
+use tracing::debug;
+use walkdir::WalkDir;
 
 /// Find all Rust files in the given source directories
-pub fn find_rust_files(source_dirs: &[String]) -> Result<Vec<PathBuf>, String> {
+pub fn find_rust_files(source_dirs: &[String]) -> Result<Vec<PathBuf>> {
     let mut files = Vec::new();
 
     for dir_str in source_dirs {
         let dir = Path::new(dir_str);
 
         if !dir.exists() {
-            return Err(format!("Source directory does not exist: {}", dir_str));
+            return Err(anyhow!("Source directory does not exist: {}", dir_str));
         }
 
         if !dir.is_dir() {
-            return Err(format!("Not a directory: {}", dir_str));
+            return Err(anyhow!("Not a directory: {}", dir_str));
         }
 
-        // Recursively find all .rs files
-        find_rs_files_recursive(dir, &mut files)?;
+        debug!("Discovering files in: {}", dir_str);
+
+        // Use walkdir to recursively find all .rs files
+        for entry in WalkDir::new(dir)
+            .into_iter()
+            .filter_map(Result::ok)
+            .filter(|e| !should_skip(e.path()))
+        {
+            let path = entry.path();
+            if path.extension().and_then(|s| s.to_str()) == Some("rs") {
+                files.push(path.to_path_buf());
+            }
+        }
     }
 
     // Sort for consistent output
@@ -27,38 +41,32 @@ pub fn find_rust_files(source_dirs: &[String]) -> Result<Vec<PathBuf>, String> {
     Ok(files)
 }
 
-/// Recursively walk directory tree and collect .rs files
-fn find_rs_files_recursive(dir: &Path, files: &mut Vec<PathBuf>) -> Result<(), String> {
-    let entries = fs::read_dir(dir)
-        .map_err(|e| format!("Failed to read directory {}: {}", dir.display(), e))?;
+/// Check if path should be skipped during discovery using glob patterns
+fn should_skip(path: &Path) -> bool {
+    // Default exclude patterns
+    let exclude_patterns = vec![
+        "**/target/**",
+        "**/node_modules/**",
+        "**/.git/**",
+        "**/tests/**",
+        "**/.hidden/*",
+    ];
 
-    for entry in entries {
-        let entry = entry.map_err(|e| format!("Failed to read directory entry: {}", e))?;
+    let path_str = path.to_string_lossy();
 
-        let path = entry.path();
-
-        // Skip target/ and other build directories
-        if should_skip(&path) {
-            continue;
-        }
-
-        if path.is_dir() {
-            find_rs_files_recursive(&path, files)?;
-        } else if path.extension().and_then(|s| s.to_str()) == Some("rs") {
-            files.push(path);
+    // Check if path matches any exclude pattern
+    for pattern_str in exclude_patterns {
+        if let Ok(pattern) = Pattern::new(pattern_str) {
+            if pattern.matches(&path_str) {
+                return true;
+            }
         }
     }
 
-    Ok(())
-}
-
-/// Check if path should be skipped during discovery
-fn should_skip(path: &Path) -> bool {
-    let skip_dirs = ["target", "build", ".git", "node_modules", ".hidden"];
-
+    // Also skip hidden files and directories
     path.file_name()
         .and_then(|name| name.to_str())
-        .map(|name| skip_dirs.contains(&name) || name.starts_with('.'))
+        .map(|name| name.starts_with('.') && name != ".")
         .unwrap_or(false)
 }
 
