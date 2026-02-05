@@ -5,26 +5,41 @@ use toml::Table;
 
 #[derive(Debug, Clone)]
 pub struct Config {
-    pub output_dir: String,
+    /// Source directories to scan for code
     pub source_dirs: Vec<String>,
-    pub main_diagram: String,
-    pub formatter: String,
-    pub watch_pattern: String,
+    /// Output file for generated documentation (e.g., docs/architecture.md)
+    pub output_file: String,
+    /// Layout type: dependency-graph, layered, readme-embedded
+    pub layout: String,
+    /// Patterns to exclude from scanning
+    pub exclude_patterns: Vec<String>,
+    /// Optional layer configuration for layered layout
+    pub layers: Vec<Layer>,
 }
 
-impl Default for Config {
-    fn default() -> Self {
-        Config {
-            output_dir: "docs".to_string(),
-            source_dirs: vec!["src".to_string()],
-            main_diagram: "STRUCT.md".to_string(),
-            formatter: "folder_markdown".to_string(),
-            watch_pattern: "**/*.rs".to_string(),
-        }
-    }
+#[derive(Debug, Clone)]
+pub struct Layer {
+    pub name: String,
+    pub patterns: Vec<String>,
 }
 
 impl Config {
+    /// Returns hardcoded defaults (shared between auto-gen and init)
+    pub fn defaults() -> Self {
+        Config {
+            source_dirs: vec!["src".to_string()],
+            output_file: "docs/architecture.md".to_string(),
+            layout: "dependency-graph".to_string(),
+            exclude_patterns: vec![
+                "**/target/**".to_string(),
+                "**/node_modules/**".to_string(),
+                "**/.git/**".to_string(),
+                "**/tests/**".to_string(),
+            ],
+            layers: Vec::new(),
+        }
+    }
+
     /// Generate TOML string representation
     pub fn to_toml(&self) -> String {
         let source_dirs = self
@@ -34,42 +49,74 @@ impl Config {
             .collect::<Vec<_>>()
             .join(", ");
 
-        format!(
-            r#"[codetwin]
-# Output directory for generated documentation
-output_dir = "{}"
+        let exclude_patterns = self
+            .exclude_patterns
+            .iter()
+            .map(|p| format!("\"{}\"", p))
+            .collect::<Vec<_>>()
+            .join(", ");
+
+        let mut toml = format!(
+            r#"# CodeTwin Configuration
+# Code → Diagram/Documentation Generator
+# https://github.com/carlosferreyra/codetwin
 
 # Source directories to scan
 source_dirs = [{}]
 
-# Main diagram filename
-main_diagram = "{}"
+# Output file for generated documentation
+output_file = "{}"
 
-# Formatter strategy (e.g. folder_markdown, one_per_file)
-formatter = "{}"
+# Layout: dependency-graph, layered, readme-embedded
+layout = "{}"
 
-# Watch pattern for file monitoring
-watch_pattern = "{}"
+# Patterns to exclude from scanning
+exclude_patterns = [{}]
 "#,
-            self.output_dir, source_dirs, self.main_diagram, self.formatter, self.watch_pattern
-        )
+            source_dirs, self.output_file, self.layout, exclude_patterns
+        );
+
+        // Add layer configuration if present
+        if !self.layers.is_empty() {
+            toml.push_str("\n# Layer configuration (for layered layout)\n");
+            for layer in &self.layers {
+                let patterns = layer
+                    .patterns
+                    .iter()
+                    .map(|p| format!("\"{}\"", p))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+
+                toml.push_str(&format!(
+                    "\n[[layers]]\nname = \"{}\"\npatterns = [{}]\n",
+                    layer.name, patterns
+                ));
+            }
+        }
+
+        toml
     }
 
-    /// Write config to codetwin.toml
-    pub fn save(&self) -> Result<(), String> {
+    /// Write config to codetwin.toml (idempotent like uv init)
+    pub fn save(&self, force: bool) -> Result<(), String> {
         let path = Path::new("codetwin.toml");
 
-        if path.exists() {
-            return Err(
-                "codetwin.toml already exists. Remove it first if you want to reinitialize."
-                    .to_string(),
-            );
+        if path.exists() && !force {
+            return Err("codetwin.toml already initialized. Use --force to overwrite.".to_string());
         }
 
         let content = self.to_toml();
         fs::write(path, content).map_err(|e| format!("Failed to write codetwin.toml: {}", e))?;
 
         Ok(())
+    }
+
+    /// Load config from codetwin.toml, or return defaults if missing
+    pub fn load_or_defaults(path: &str) -> Self {
+        match Self::load(path) {
+            Ok(config) => config,
+            Err(_) => Self::defaults(),
+        }
     }
 
     /// Load config from codetwin.toml
@@ -81,18 +128,7 @@ watch_pattern = "{}"
             .parse()
             .map_err(|e| format!("Failed to parse {}: {}", path, e))?;
 
-        let codetwin = table
-            .get("codetwin")
-            .and_then(|v| v.as_table())
-            .ok_or_else(|| "Missing [codetwin] section in config".to_string())?;
-
-        let output_dir = codetwin
-            .get("output_dir")
-            .and_then(|v| v.as_str())
-            .unwrap_or("docs")
-            .to_string();
-
-        let source_dirs = codetwin
+        let source_dirs = table
             .get("source_dirs")
             .and_then(|v| v.as_array())
             .map(|arr| {
@@ -102,61 +138,69 @@ watch_pattern = "{}"
             })
             .unwrap_or_else(|| vec!["src".to_string()]);
 
-        let main_diagram = codetwin
-            .get("main_diagram")
+        let output_file = table
+            .get("output_file")
             .and_then(|v| v.as_str())
-            .unwrap_or("STRUCT.md")
+            .unwrap_or("docs/architecture.md")
             .to_string();
 
-        let formatter = codetwin
-            .get("formatter")
+        let layout = table
+            .get("layout")
             .and_then(|v| v.as_str())
-            .unwrap_or("folder_markdown")
+            .unwrap_or("dependency-graph")
             .to_string();
 
-        let watch_pattern = codetwin
-            .get("watch_pattern")
-            .and_then(|v| v.as_str())
-            .unwrap_or("**/*.rs")
-            .to_string();
+        let exclude_patterns = table
+            .get("exclude_patterns")
+            .and_then(|v| v.as_array())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                    .collect()
+            })
+            .unwrap_or_else(|| {
+                vec![
+                    "**/target/**".to_string(),
+                    "**/node_modules/**".to_string(),
+                    "**/.git/**".to_string(),
+                    "**/tests/**".to_string(),
+                ]
+            });
+
+        // Parse layers if present
+        let layers = table
+            .get("layers")
+            .and_then(|v| v.as_array())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|item| item.as_table())
+                    .map(|layer_table| {
+                        let name = layer_table
+                            .get("name")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("Unknown")
+                            .to_string();
+                        let patterns = layer_table
+                            .get("patterns")
+                            .and_then(|v| v.as_array())
+                            .map(|arr| {
+                                arr.iter()
+                                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                                    .collect()
+                            })
+                            .unwrap_or_default();
+                        Layer { name, patterns }
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
 
         Ok(Config {
-            output_dir,
             source_dirs,
-            main_diagram,
-            formatter,
-            watch_pattern,
+            output_file,
+            layout,
+            exclude_patterns,
+            layers,
         })
     }
-}
-
-/// Generate template STRUCT.md content
-pub fn struct_md_template() -> String {
-    r#"# Project Architecture
-
-> Auto-generated documentation. Run `codetwin sync` to update.
-
-## Module Dependencies
-
-```mermaid
-graph TD
-    main[main.rs]
-    cli[cli.rs]
-    engine[engine.rs]
-    ir[ir.rs]
-    drivers[drivers/]
-
-    main --> cli
-    cli --> engine
-    engine --> drivers
-    engine --> ir
-```
-
----
-
-## Files
-
-_Documentation will appear here after running `codetwin sync`_
-"#
-    .to_string()
 }

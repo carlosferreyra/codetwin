@@ -1,21 +1,21 @@
 use std::collections::BTreeMap;
 
-use super::Formatter;
+use super::Layout;
 use crate::ir::{Blueprint, Element, Visibility};
 
-pub struct FolderMarkdownFormatter {
+pub struct FolderMarkdownLayout {
     main_diagram: String,
 }
 
-impl FolderMarkdownFormatter {
+impl FolderMarkdownLayout {
     pub fn new(main_diagram: impl Into<String>) -> Self {
-        FolderMarkdownFormatter {
+        FolderMarkdownLayout {
             main_diagram: main_diagram.into(),
         }
     }
 }
 
-impl Formatter for FolderMarkdownFormatter {
+impl Layout for FolderMarkdownLayout {
     fn format(&self, blueprints: &[Blueprint]) -> Result<Vec<(String, String)>, String> {
         if blueprints.is_empty() {
             return Err("No elements found to format".to_string());

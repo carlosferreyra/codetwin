@@ -1,9 +1,9 @@
-use crate::config::{Config, struct_md_template};
+use crate::config::Config;
 use crate::discovery;
 use crate::drivers;
-use crate::formatters;
 /// The "Brain" - SyncEngine and the Loop logic
 use crate::ir::*;
+use crate::layouts;
 use std::fs;
 use std::path::PathBuf;
 
@@ -24,18 +24,18 @@ impl SyncEngine {
         Err("watch: Not implemented yet".to_string())
     }
 
-    pub fn sync(&self) -> Result<(), String> {
-        // Load config
-        let config = Config::load("codetwin.toml")?;
-        println!("📖 Config loaded from codetwin.toml");
+    /// Generate diagrams/documentation from source code
+    /// This is the main unidirectional operation: code → diagrams
+    pub fn generate(&self, config: &Config) -> Result<(), String> {
+        println!("📖 Config loaded (layout: {})", config.layout);
 
-        // Discover Rust files
+        // Discover source files
         println!("🔍 Discovering source files...");
         let files = discovery::find_rust_files(&config.source_dirs)?;
         println!("   Found {} Rust files", files.len());
 
         // Parse each file
-        println!("🔨 Parsing Rust code...");
+        println!("🔨 Parsing code...");
         let mut blueprints: Vec<Blueprint> = Vec::new();
 
         for file_path in files {
@@ -67,62 +67,62 @@ impl SyncEngine {
             return Err("No elements found in any source files".to_string());
         }
 
-        let output_dir = PathBuf::from(&config.output_dir);
-        println!("📝 Creating {} directory...", config.output_dir);
+        // Get output directory from output_file
+        let output_path = PathBuf::from(&config.output_file);
+        let output_dir = output_path
+            .parent()
+            .unwrap_or_else(|| std::path::Path::new("docs"));
+
+        println!("📝 Creating output directory: {}", output_dir.display());
         fs::create_dir_all(&output_dir)
             .map_err(|e| format!("Failed to create output dir: {}", e))?;
 
-        let formatter = formatters::get_formatter(&config)?;
-        let outputs = formatter
+        // Apply layout
+        let layout = layouts::get_layout(&config)?;
+        let outputs = layout
             .format(&blueprints)
             .map_err(|e| format!("Failed to format documentation: {}", e))?;
 
+        // Write outputs
         println!("📝 Writing formatted outputs...");
         for (file_name, content) in outputs {
             let file_path = output_dir.join(&file_name);
             fs::write(&file_path, content)
                 .map_err(|e| format!("Failed to write {}: {}", file_path.display(), e))?;
-            println!("   - {}", file_path.display());
+            println!("   ✓ {}", file_path.display());
         }
 
         println!(
             "\n✅ Successfully generated documentation in {}/",
-            config.output_dir
+            output_dir.display()
         );
 
         Ok(())
     }
 
-    pub fn check(&self) -> Result<(), String> {
-        Err("check: Not implemented yet".to_string())
-    }
+    pub fn init(&self, force: bool) -> Result<(), String> {
+        if !force && std::path::Path::new("codetwin.toml").exists() {
+            println!("✓ codetwin.toml already initialized");
+            return Ok(());
+        }
 
-    pub fn init(&self) -> Result<(), String> {
         println!("🚀 Initializing codetwin project...\n");
 
         // Create default config
-        let config = Config::default();
-
-        // Create docs directory
-        println!("📁 Creating {} directory...", config.output_dir);
-        fs::create_dir_all(&config.output_dir)
-            .map_err(|e| format!("Failed to create {}: {}", config.output_dir, e))?;
+        let config = Config::defaults();
 
         // Write config file
         println!("⚙️  Creating codetwin.toml...");
-        config.save()?;
-
-        // Write template STRUCT.md
-        let struct_path = PathBuf::from(&config.output_dir).join(&config.main_diagram);
-        println!("📝 Creating {}...", struct_path.display());
-        fs::write(&struct_path, struct_md_template())
-            .map_err(|e| format!("Failed to write {}: {}", struct_path.display(), e))?;
+        config.save(force)?;
 
         println!("\n✅ Project initialized successfully!\n");
         println!("📖 Next steps:");
         println!("   1. Review codetwin.toml and customize if needed");
-        println!("   2. Run 'codetwin sync' to generate documentation");
-        println!("   3. Check docs/ for the generated STRUCT.md\n");
+        println!("   2. Run 'ctw gen' to generate diagrams");
+        println!(
+            "   3. Check {} for the generated documentation\n",
+            config.output_file
+        );
 
         Ok(())
     }

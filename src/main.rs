@@ -1,6 +1,8 @@
 use clap::{CommandFactory, Parser};
 use codetwin::cli::{Cli, Commands};
+use codetwin::config::Config;
 use codetwin::engine::SyncEngine;
+use std::path::Path;
 
 fn main() {
     let cli = Cli::parse();
@@ -10,101 +12,110 @@ fn main() {
         eprintln!("[verbose mode enabled]");
     }
 
-    if let Some(cwd) = &cli.cwd
-        && let Err(e) = std::env::set_current_dir(cwd)
-    {
-        eprintln!("Error: Failed to change directory to '{}': {}", cwd, e);
-        std::process::exit(1);
+    if let Some(cwd) = &cli.cwd {
+        if let Err(e) = std::env::set_current_dir(cwd) {
+            eprintln!("Error: Failed to change directory to '{}': {}", cwd, e);
+            std::process::exit(1);
+        }
     }
 
     let engine = SyncEngine::new();
 
-    let result = match cli.command {
-        Some(Commands::Watch {
-            source,
+    let result: Result<(), String> = match cli.command {
+        Some(Commands::Gen {
             output,
-            strategy,
-            debounce,
-            notify,
+            layout,
+            source,
+            exclude,
+            save,
         }) => {
+            // Load config or create defaults
+            let mut config = Config::load_or_defaults("codetwin.toml");
+
+            // Auto-create config if it doesn't exist
+            if !Path::new("codetwin.toml").exists() {
+                if !cli.quiet {
+                    println!("⚙️  Creating codetwin.toml with defaults...");
+                }
+                if let Err(e) = config.save(false) {
+                    eprintln!("Warning: Could not save initial config: {}", e);
+                }
+            }
+
+            // Apply ephemeral flag overrides
+            if let Some(o) = output {
+                config.output_file = o;
+            }
+            if let Some(l) = layout {
+                config.layout = l;
+            }
+            if let Some(s) = source {
+                config.source_dirs = s;
+            }
+            if let Some(e) = exclude {
+                config.exclude_patterns.extend(e);
+            }
+
+            // Persist if --save flag is set
+            if save {
+                if !cli.quiet {
+                    println!("💾 Saving configuration to codetwin.toml...");
+                }
+                if let Err(e) = config.save(true) {
+                    eprintln!("Error saving config: {}", e);
+                }
+            }
+
+            engine.generate(&config)
+        }
+        Some(Commands::Watch {
+            output,
+            layout,
+            source,
+            debounce,
+            exclude,
+        }) => {
+            // Load config or create defaults
+            let mut config = Config::load_or_defaults("codetwin.toml");
+
+            // Auto-create config if it doesn't exist
+            if !Path::new("codetwin.toml").exists() {
+                if !cli.quiet {
+                    println!("⚙️  Creating codetwin.toml with defaults...");
+                }
+                if let Err(e) = config.save(false) {
+                    eprintln!("Warning: Could not save initial config: {}", e);
+                }
+            }
+
+            // Apply ephemeral flag overrides
+            if let Some(o) = output {
+                config.output_file = o;
+            }
+            if let Some(l) = layout {
+                config.layout = l;
+            }
+            if let Some(s) = source {
+                config.source_dirs = s;
+            }
+            if let Some(e) = exclude {
+                config.exclude_patterns.extend(e);
+            }
+
             if !cli.quiet {
-                println!("Starting watch mode...");
-                println!(
-                    "  source: {:?}",
-                    source.unwrap_or_else(|| "auto-detect".to_string())
-                );
-                println!(
-                    "  output: {:?}",
-                    output.unwrap_or_else(|| "auto-detect".to_string())
-                );
-                println!(
-                    "  strategy: {:?}",
-                    strategy.unwrap_or_else(|| "auto-detect".to_string())
-                );
-                println!("  debounce: {}ms", debounce);
-                println!("  notify: {}", notify);
+                println!("👀 Watching for changes (debounce: {}ms)...", debounce);
             }
             engine.watch()
         }
-        Some(Commands::Sync {
-            source,
-            output,
-            strategy,
-            dry_run,
-            docs_only,
-            code_only,
-            force,
-        }) => {
+        Some(Commands::Init { force }) => {
             if !cli.quiet {
-                println!("Running sync...");
-                println!(
-                    "  source: {:?}",
-                    source.unwrap_or_else(|| "auto-detect".to_string())
-                );
-                println!(
-                    "  output: {:?}",
-                    output.unwrap_or_else(|| "auto-detect".to_string())
-                );
-                println!(
-                    "  strategy: {:?}",
-                    strategy.unwrap_or_else(|| "auto-detect".to_string())
-                );
-                println!("  dry-run: {}", dry_run);
-                println!("  docs-only: {}", docs_only);
-                println!("  code-only: {}", code_only);
-                println!("  force: {}", force);
+                println!("🚀 Initializing codetwin...");
             }
-            engine.sync()
-        }
-        Some(Commands::Check {
-            strict,
-            diff,
-            fail_on_warnings,
-        }) => {
-            if !cli.quiet {
-                println!("Running check...");
-                println!("  strict: {}", strict);
-                println!("  diff: {}", diff);
-                println!("  fail-on-warnings: {}", fail_on_warnings);
-            }
-            engine.check()
-        }
-        Some(Commands::Init {
-            shadow,
-            fractal,
-            git_hook,
-        }) => {
-            if !cli.quiet {
-                println!("Initializing project structure...");
-                println!("  shadow: {}", shadow);
-                println!("  fractal: {}", fractal);
-                println!("  git-hook: {}", git_hook);
-            }
-            engine.init()
+            engine.init(force)
         }
         Some(Commands::List) => {
             if !cli.quiet {
-                println!("Listing detected configuration...");
+                println!("📋 Listing detected configuration...");
             }
             engine.list()
         }
@@ -120,7 +131,7 @@ fn main() {
     match result {
         Ok(_) => {
             if !cli.quiet {
-                println!("✓ Command completed successfully");
+                println!("✓ Done");
             }
         }
         Err(e) => {

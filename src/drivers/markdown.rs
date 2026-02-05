@@ -1,7 +1,7 @@
 use super::trait_def::Driver;
-use crate::formatters::folder_markdown::generate_file_md;
 /// Markdown generator - Blueprint → file-level .rs.md with class diagram
 use crate::ir::Blueprint;
+use crate::layouts::folder_markdown::generate_file_md;
 use std::slice;
 
 pub struct MarkdownDriver;

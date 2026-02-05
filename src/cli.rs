@@ -4,8 +4,8 @@ use clap::{Parser, Subcommand};
 #[command(
     name = "CodeTwin",
     version = "0.1.0",
-    about = "Bidirectional Architecture Synchronizer",
-    long_about = "CodeTwin (ct) - Bidirectional Architecture Synchronizer\nhttps://github.com/carlosferreyra/codetwin"
+    about = "Code → Diagram/Documentation Generator",
+    long_about = "CodeTwin (ctw) - Unidirectional code to diagram generator\nhttps://github.com/carlosferreyra/codetwin\n\nHelp developers visually understand repository structure and design patterns."
 )]
 pub struct Cli {
     /// Enable detailed logs (e.g., scanning specific files)
@@ -30,88 +30,57 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
-    /// Starts the daemon to keep code & docs in sync [DEFAULT]
-    Watch {
-        /// Override source directory (Default: auto-detect src/ lib/ app/)
-        #[arg(short, long, value_name = "DIR")]
-        source: Option<String>,
-
-        /// Override output path (Default: auto-detect docs/ or README.md)
-        #[arg(short, long, value_name = "PATH")]
+    /// Generate diagrams/documentation from source code [DEFAULT]
+    Gen {
+        /// Override output file path (e.g., docs/api.md)
+        #[arg(long, value_name = "PATH")]
         output: Option<String>,
 
-        /// Override strategy [root, fractal, shadow]
-        #[arg(long, value_name = "MODE")]
-        strategy: Option<String>,
+        /// Override layout: dependency-graph, layered, readme-embedded
+        #[arg(long, value_name = "LAYOUT")]
+        layout: Option<String>,
 
-        /// Time to wait after last event (Default: 300)
-        #[arg(short, long, value_name = "MS", default_value = "300")]
+        /// Override source directory (can be used multiple times)
+        #[arg(long, value_name = "DIR")]
+        source: Option<Vec<String>>,
+
+        /// Additional exclude pattern (e.g., **/tests/**)
+        #[arg(long, value_name = "PATTERN")]
+        exclude: Option<Vec<String>>,
+
+        /// Persist flag overrides to codetwin.toml
+        #[arg(long)]
+        save: bool,
+    },
+
+    /// Watch source directories and auto-regenerate on changes
+    Watch {
+        /// Override output file path
+        #[arg(long, value_name = "PATH")]
+        output: Option<String>,
+
+        /// Override layout
+        #[arg(long, value_name = "LAYOUT")]
+        layout: Option<String>,
+
+        /// Override source directory (can be used multiple times)
+        #[arg(long, value_name = "DIR")]
+        source: Option<Vec<String>>,
+
+        /// Time to wait after last event before regenerating (ms) [default: 300]
+        #[arg(long, value_name = "MS", default_value = "300")]
         debounce: u64,
 
-        /// Send system notification on sync
-        #[arg(long)]
-        notify: bool,
+        /// Override exclude pattern (can be used multiple times)
+        #[arg(long, value_name = "PATTERN")]
+        exclude: Option<Vec<String>>,
     },
 
-    /// Runs the synchronization logic once and exits
-    Sync {
-        /// Override source directory (Default: auto-detect src/ lib/ app/)
-        #[arg(short, long, value_name = "DIR")]
-        source: Option<String>,
-
-        /// Override output path (Default: auto-detect docs/ or README.md)
-        #[arg(short, long, value_name = "PATH")]
-        output: Option<String>,
-
-        /// Override strategy [root, fractal, shadow]
-        #[arg(long, value_name = "MODE")]
-        strategy: Option<String>,
-
-        /// Show what would change without writing to disk
-        #[arg(long)]
-        dry_run: bool,
-
-        /// One-way sync: Code -> Docs (Never edit code)
-        #[arg(long)]
-        docs_only: bool,
-
-        /// One-way sync: Docs -> Code (Never edit docs)
-        #[arg(long)]
-        code_only: bool,
-
-        /// Overwrite files even if conflicting changes detected
-        #[arg(short, long)]
-        force: bool,
-    },
-
-    /// Read-only mode for CI/CD. Returns exit code 1 on drift
-    Check {
-        /// Fail on minor warnings (missing docstrings, etc.)
-        #[arg(long)]
-        strict: bool,
-
-        /// Print a unified diff of the drift
-        #[arg(long)]
-        diff: bool,
-
-        /// Treat warnings as fatal errors
-        #[arg(long)]
-        fail_on_warnings: bool,
-    },
-
-    /// Scaffolds a new configuration or folder structure
+    /// Initialize or regenerate codetwin.toml configuration
     Init {
-        /// Create the docs/ folder structure
+        /// Overwrite existing codetwin.toml
         #[arg(long)]
-        shadow: bool,
-
-        /// Create README.md files in source subdirectories
-        #[arg(long)]
-        fractal: bool,
-
-        /// Install a pre-commit hook
-        #[arg(long)]
-        git_hook: bool,
+        force: bool,
     },
 
     /// Debug helper to inspect what CodeTwin detects

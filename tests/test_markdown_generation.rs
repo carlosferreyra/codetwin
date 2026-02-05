@@ -64,6 +64,7 @@ fn test_generate_struct_md() {
                 },
             }),
         ],
+        dependencies: vec![],
     };
 
     // Generate markdown

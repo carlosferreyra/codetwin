@@ -5,12 +5,11 @@ mod tests {
     #[test]
     fn test_config_load() {
         let cfg = Config::load("codetwin.toml").expect("Failed to load config");
-        assert_eq!(cfg.output_dir, "docs");
-        assert_eq!(cfg.main_diagram, "STRUCT.md");
+        assert!(cfg.output_file.ends_with(".md"));
         assert!(cfg.source_dirs.contains(&"src".to_string()));
         println!(
-            "✅ Config loaded: output_dir={}, source_dirs={:?}",
-            cfg.output_dir, cfg.source_dirs
+            "✅ Config loaded: output_file={}, source_dirs={:?}",
+            cfg.output_file, cfg.source_dirs
         );
     }
 

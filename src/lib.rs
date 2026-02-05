@@ -4,6 +4,6 @@ pub mod config;
 pub mod discovery;
 pub mod drivers;
 pub mod engine;
-pub mod formatters;
 pub mod io;
 pub mod ir;
+pub mod layouts;

@@ -1,21 +1,21 @@
-use super::Formatter;
+use super::Layout;
 use crate::ir::Blueprint;
 
-pub struct OnePerFileFormatter;
+pub struct OnePerFileLayout;
 
-impl Default for OnePerFileFormatter {
+impl Default for OnePerFileLayout {
     fn default() -> Self {
-        OnePerFileFormatter
+        OnePerFileLayout
     }
 }
 
-impl OnePerFileFormatter {
+impl OnePerFileLayout {
     pub fn new() -> Self {
-        OnePerFileFormatter
+        OnePerFileLayout
     }
 }
 
-impl Formatter for OnePerFileFormatter {
+impl Layout for OnePerFileLayout {
     fn format(&self, blueprints: &[Blueprint]) -> Result<Vec<(String, String)>, String> {
         let mut outputs = Vec::new();
 

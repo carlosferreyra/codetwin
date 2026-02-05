@@ -37,7 +37,7 @@ cargo run
 
 As features land, the CLI will expose subcommands using `clap`.
 
-## Formatter layouts
+## Documentation Layouts
 
 - folder_markdown (Available): One Markdown per source folder plus an index file; default layout.
 - mirror_tree (Proposed): Mirror `src/` structure into `docs/` with one Markdown per source file or

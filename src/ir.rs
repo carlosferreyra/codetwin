@@ -8,6 +8,7 @@ pub struct Blueprint {
     pub source_path: PathBuf,
     pub language: String, // "python", "typescript", "rust", etc.
     pub elements: Vec<Element>,
+    pub dependencies: Vec<String>, // Module names this file depends on
 }
 
 /// Element = Any documentable code construct (module-level only, no nesting)
