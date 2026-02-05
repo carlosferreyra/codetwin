@@ -48,6 +48,10 @@ pub enum Commands {
         #[arg(long, value_name = "PATTERN")]
         exclude: Option<Vec<String>>,
 
+        /// Path to custom layout configuration file (IR-compliant TOML)
+        #[arg(long, value_name = "FILE")]
+        custom_layout: Option<String>,
+
         /// Persist flag overrides to codetwin.toml
         #[arg(long)]
         save: bool,

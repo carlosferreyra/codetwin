@@ -5,6 +5,11 @@ use codetwin::engine::SyncEngine;
 use std::path::Path;
 
 fn main() {
+    // Initialize tracing subscriber with env-filter
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
+
     let cli = Cli::parse();
 
     // Handle global flags
@@ -21,12 +26,13 @@ fn main() {
 
     let engine = SyncEngine::new();
 
-    let result: Result<(), String> = match cli.command {
+    let result: anyhow::Result<()> = match cli.command {
         Some(Commands::Gen {
             output,
             layout,
             source,
             exclude,
+            custom_layout,
             save,
         }) => {
             // Load config or create defaults
@@ -66,7 +72,7 @@ fn main() {
                 }
             }
 
-            engine.generate(&config)
+            engine.generate(&config, cli.json, custom_layout.as_deref())
         }
         Some(Commands::Watch {
             output,
@@ -105,7 +111,7 @@ fn main() {
             if !cli.quiet {
                 println!("👀 Watching for changes (debounce: {}ms)...", debounce);
             }
-            engine.watch()
+            engine.watch(&config, debounce)
         }
         Some(Commands::Init { force }) => {
             if !cli.quiet {
@@ -130,12 +136,12 @@ fn main() {
 
     match result {
         Ok(_) => {
-            if !cli.quiet {
+            if !cli.quiet && !cli.json {
                 println!("✓ Done");
             }
         }
         Err(e) => {
-            eprintln!("✗ Error: {}", e);
+            eprintln!("✗ Error: {:#}", e);
             std::process::exit(1);
         }
     }
