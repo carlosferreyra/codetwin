@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 
 use super::Layout;
 use crate::ir::{Blueprint, Element, Visibility};
+use anyhow::{anyhow, Result};
 
 pub struct FolderMarkdownLayout {
     main_diagram: String,
@@ -16,9 +17,9 @@ impl FolderMarkdownLayout {
 }
 
 impl Layout for FolderMarkdownLayout {
-    fn format(&self, blueprints: &[Blueprint]) -> Result<Vec<(String, String)>, String> {
+    fn format(&self, blueprints: &[Blueprint]) -> Result<Vec<(String, String)>> {
         if blueprints.is_empty() {
-            return Err("No elements found to format".to_string());
+            return Err(anyhow!("No elements found to format"));
         }
 
         let mut folder_blueprints: BTreeMap<String, Vec<Blueprint>> = BTreeMap::new();
@@ -43,15 +44,15 @@ impl Layout for FolderMarkdownLayout {
             outputs.push((file_name, content));
         }
 
-        let modules: Vec<&str> = folder_blueprints.keys().map(|s| s.as_str()).collect();
-        let index = generate_index_md(&modules)?;
+        // Generate index dynamically from all blueprints, not hardcoded modules
+        let index = generate_index_md(blueprints)?;
         outputs.push((self.main_diagram.clone(), index));
 
         Ok(outputs)
     }
 }
 
-pub(crate) fn generate_file_md(blueprints: &[Blueprint]) -> Result<String, String> {
+pub(crate) fn generate_file_md(blueprints: &[Blueprint]) -> Result<String> {
     let mut output = String::new();
 
     if blueprints.is_empty() {
@@ -83,7 +84,7 @@ pub(crate) fn generate_file_md(blueprints: &[Blueprint]) -> Result<String, Strin
     Ok(output)
 }
 
-pub(crate) fn generate_index_md(modules: &[&str]) -> Result<String, String> {
+pub(crate) fn generate_index_md(blueprints: &[Blueprint]) -> Result<String> {
     let mut output = String::new();
 
     output.push_str("# Project Architecture\n\n");
@@ -91,26 +92,42 @@ pub(crate) fn generate_index_md(modules: &[&str]) -> Result<String, String> {
 
     output.push_str("```mermaid\n");
     output.push_str("graph TD\n");
-    output.push_str("    main[main.rs]\n");
-    output.push_str("    cli[cli.rs]\n");
-    output.push_str("    engine[engine.rs]\n");
-    output.push_str("    ir[ir.rs]\n");
-    output.push_str("    drivers[drivers/]\n");
-    output.push_str("    io[io/]\n");
-    output.push_str("    discovery[discovery.rs]\n\n");
-    output.push_str("    main --> cli\n");
-    output.push_str("    cli --> engine\n");
-    output.push_str("    engine --> drivers\n");
-    output.push_str("    engine --> ir\n");
-    output.push_str("    engine --> io\n");
-    output.push_str("    engine --> discovery\n");
+
+    // Add nodes dynamically from blueprints
+    let mut node_ids = std::collections::HashSet::new();
+    for blueprint in blueprints {
+        let module_name = extract_module_name(&blueprint.source_path);
+        let node_id = sanitize_id(&module_name);
+        if node_ids.insert(node_id.clone()) {
+            output.push_str(&format!("    {}[{}]\n", node_id, module_name));
+        }
+    }
+
+    // Add edges from dependencies (if available in IR)
+    for blueprint in blueprints {
+        for dep in &blueprint.dependencies {
+            let from_id = sanitize_id(&extract_module_name(&blueprint.source_path));
+            let to_id = sanitize_id(dep);
+            output.push_str(&format!("    {} --> {}\n", from_id, to_id));
+        }
+    }
+
     output.push_str("```\n\n");
 
     output.push_str("---\n\n");
-    output.push_str("## Files\n\n");
+    output.push_str("## Modules\n\n");
 
-    for module in modules {
-        output.push_str(&format!("- [{}]({})\n", module, format_module_path(module)));
+    // Build unique module list from blueprints
+    let mut modules_seen = std::collections::HashSet::new();
+    for blueprint in blueprints {
+        let module_name = extract_module_name(&blueprint.source_path);
+        if modules_seen.insert(module_name.clone()) {
+            output.push_str(&format!(
+                "- [{}]({})\n",
+                module_name,
+                format_module_path(&module_name)
+            ));
+        }
     }
 
     Ok(output)
@@ -118,6 +135,22 @@ pub(crate) fn generate_index_md(modules: &[&str]) -> Result<String, String> {
 
 fn format_module_path(module: &str) -> String {
     format!("{}.md", module)
+}
+
+/// Extract module name from file path
+fn extract_module_name(path: &std::path::Path) -> String {
+    path.file_stem()
+        .and_then(|stem| stem.to_str())
+        .unwrap_or("unknown")
+        .to_string()
+}
+
+/// Sanitize names for Mermaid node IDs
+fn sanitize_id(name: &str) -> String {
+    name.replace(" ", "_")
+        .replace("-", "_")
+        .replace("/", "_")
+        .replace(".", "_")
 }
 
 fn mermaid_visibility(vis: &Visibility) -> &'static str {

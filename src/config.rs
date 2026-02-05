@@ -1,9 +1,11 @@
+use anyhow::{anyhow, Context, Result};
+use serde::{Deserialize, Serialize};
 /// Configuration management - reads/writes codetwin.toml
 use std::fs;
 use std::path::Path;
 use toml::Table;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     /// Source directories to scan for code
     pub source_dirs: Vec<String>,
@@ -17,7 +19,7 @@ pub struct Config {
     pub layers: Vec<Layer>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Layer {
     pub name: String,
     pub patterns: Vec<String>,
@@ -36,7 +38,9 @@ impl Config {
                 "**/.git/**".to_string(),
                 "**/tests/**".to_string(),
             ],
-            layers: Vec::new(),
+            // Empty by default - auto-detection will be used for layered layout
+            // Users can configure custom layers if desired (see to_toml())
+            layers: vec![],
         }
     }
 
@@ -76,6 +80,23 @@ exclude_patterns = [{}]
             source_dirs, self.output_file, self.layout, exclude_patterns
         );
 
+        // Add example layer configuration (commented out)
+        toml.push_str("\n# Optional: Define custom layers for layered layout\n");
+        toml.push_str("# If omitted, layers are auto-detected from directory structure\n");
+        toml.push_str("# Example configuration (uncomment and customize):\n");
+        toml.push_str("#\n");
+        toml.push_str("# [[layers]]\n");
+        toml.push_str("# name = \"Core\"\n");
+        toml.push_str("# patterns = [\"src/lib.rs\", \"src/ir.rs\"]\n");
+        toml.push_str("#\n");
+        toml.push_str("# [[layers]]\n");
+        toml.push_str("# name = \"Engine\"\n");
+        toml.push_str("# patterns = [\"src/engine.rs\", \"src/cli.rs\"]\n");
+        toml.push_str("#\n");
+        toml.push_str("# [[layers]]\n");
+        toml.push_str("# name = \"Drivers\"\n");
+        toml.push_str("# patterns = [\"src/drivers/**\"]\n");
+
         // Add layer configuration if present
         if !self.layers.is_empty() {
             toml.push_str("\n# Layer configuration (for layered layout)\n");
@@ -98,15 +119,17 @@ exclude_patterns = [{}]
     }
 
     /// Write config to codetwin.toml (idempotent like uv init)
-    pub fn save(&self, force: bool) -> Result<(), String> {
+    pub fn save(&self, force: bool) -> Result<()> {
         let path = Path::new("codetwin.toml");
 
         if path.exists() && !force {
-            return Err("codetwin.toml already initialized. Use --force to overwrite.".to_string());
+            return Err(anyhow!(
+                "codetwin.toml already initialized. Use --force to overwrite."
+            ));
         }
 
         let content = self.to_toml();
-        fs::write(path, content).map_err(|e| format!("Failed to write codetwin.toml: {}", e))?;
+        fs::write(path, content).context("Failed to write codetwin.toml")?;
 
         Ok(())
     }
@@ -120,13 +143,12 @@ exclude_patterns = [{}]
     }
 
     /// Load config from codetwin.toml
-    pub fn load(path: &str) -> Result<Self, String> {
-        let content =
-            fs::read_to_string(path).map_err(|e| format!("Failed to read {}: {}", path, e))?;
+    pub fn load(path: &str) -> Result<Self> {
+        let content = fs::read_to_string(path).context(format!("Failed to read {}", path))?;
 
         let table: Table = content
             .parse()
-            .map_err(|e| format!("Failed to parse {}: {}", path, e))?;
+            .context(format!("Failed to parse {}", path))?;
 
         let source_dirs = table
             .get("source_dirs")
