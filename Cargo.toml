@@ -58,11 +58,12 @@
   # No changes needed here as 'release' is now the peak performance profile
 
 [package.metadata.release]
-  post-release-commit-edit = true
   pre-release-hook = [
-    "-c",
-    "bash",
-    "git-cliff --tag {{version}} --output CHANGELOG.md",
+    "git-cliff",
+    "--tag",
+    "{{version}}",
+    "--output",
+    "CHANGELOG.md",
   ]
 
 [package.metadata.dist]
