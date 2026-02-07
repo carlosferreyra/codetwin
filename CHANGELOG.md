@@ -1,8 +1,14 @@
+## [0.1.6] - 2026-02-07
+
+### ⚙️ Miscellaneous Tasks
+
+- Regenerate cargo-dist workflow
 ## [0.1.5] - 2026-02-07
 
 ### ⚙️ Miscellaneous Tasks
 
 - Fix release tag trigger
+- Release codetwin version 0.1.5
 ## [0.1.4] - 2026-02-07
 
 ### ⚙️ Miscellaneous Tasks
