@@ -53,19 +53,19 @@ Generate documentation for your Rust or Python project:
 
 ```bash
 # Generate dependency graph (default)
-ctw gen
+ct gen
 
 # Generate layered architecture
-ctw gen --layout layered
+ct gen --layout layered
 
 # Generate README summary
-ctw gen --layout readme-embedded
+ct gen --layout readme-embedded
 
 # Watch mode: auto-regenerate on file changes
-ctw watch
+ct watch
 
 # Python example
-ctw gen --source examples/python_sample.py
+ct gen --source examples/python_sample.py
 ```
 
 ## Layout Options
@@ -75,7 +75,7 @@ ctw gen --source examples/python_sample.py
 Shows how modules depend on each other. Ideal for understanding coupling and module relationships.
 
 ```bash
-ctw gen --layout dependency-graph --output docs/architecture.md
+ct gen --layout dependency-graph --output docs/architecture.md
 ```
 
 **Output includes**:
@@ -90,7 +90,7 @@ Organizes code into logical tiers (UI, API, Business Logic, Database, etc.). Bes
 reviews.
 
 ```bash
-ctw gen --layout layered --output docs/layers.md
+ct gen --layout layered --output docs/layers.md
 ```
 
 **Output includes**:
@@ -121,7 +121,7 @@ patterns = ["src/db/**", "src/models/**"]
 Compact summary designed for README files. Perfect for GitHub discovery and quick onboarding.
 
 ```bash
-ctw gen --layout readme-embedded --output docs/architecture.md
+ct gen --layout readme-embedded --output docs/architecture.md
 ```
 
 **Output includes**:
@@ -170,8 +170,8 @@ patterns = ["src/engine.rs"]
 
 ## Development
 
-- Rust edition: 2021
-- Min Rust: 1.70+ stable
+- Rust edition: 2024
+- Min Rust: 1.93+ stable
 - Key deps: `tree-sitter`, `petgraph`, `serde`, `clap`
 
 Common tasks:
@@ -194,7 +194,7 @@ cargo watch -x test
 ### Release Pipeline
 
 CodeTwin treats cargo-dist binaries as the source of truth for all CLI wrappers. The GitHub Release
-artifacts produced by cargo-dist are re-used to populate `codetwin/_bin/` before `uv build`, so the
+artifacts produced by cargo-dist are reused to populate `codetwin/_bin/` before `uv build`, so the
 PyPI wheel always ships the exact same binaries that were released.
 
 ## Features
@@ -208,6 +208,10 @@ visual understanding
 ## Repository
 
 - GitHub: <https://github.com/carlosferreyra/codetwin>
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release history and notable changes.
 
 ## License
 
