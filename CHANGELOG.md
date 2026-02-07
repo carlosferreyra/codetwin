@@ -1,8 +1,14 @@
+## [0.1.5] - 2026-02-07
+
+### ⚙️ Miscellaneous Tasks
+
+- Fix release tag trigger
 ## [0.1.4] - 2026-02-07
 
 ### ⚙️ Miscellaneous Tasks
 
 - Include non-conventional commits in changelog
+- Release codetwin version 0.1.4
 ## [0.1.3] - 2026-02-07
 
 ### 💼 Other
