@@ -1,15 +1,32 @@
-[codetwin]
-  # Output directory for generated documentation
-  output_dir = "docs"
+# CodeTwin Configuration
+# Code → Diagram/Documentation Generator
+# https://github.com/carlosferreyra/codetwin
 
-  # Source directories to scan
-  source_dirs = ["src"]
+# Source directories to scan
+source_dirs = ["src"]
 
-  # Main diagram filename
-  main_diagram = "STRUCT.md"
+# Output file for generated documentation
+# The parent directory is used as the output directory.
+output_file = "docs/architecture.md"
 
-  # Layout strategy (e.g. folder_markdown, one_per_file)
-  layout = "folder_markdown"
+# Layout: dependency-graph, folder_markdown, one_per_file, layered, readme-embedded
+layout = "dependency-graph"
 
-  # Watch pattern for file monitoring
-  watch_pattern = "**/*.rs"
+# Patterns to exclude from scanning
+exclude_patterns = ["**/target/**", "**/node_modules/**", "**/.git/**", "**/tests/**"]
+
+# Optional: Define custom layers for layered layout
+# If omitted, layers are auto-detected from directory structure
+# Example configuration (uncomment and customize):
+#
+# [[layers]]
+# name = "Core"
+# patterns = ["src/lib.rs", "src/core/ir.rs"]
+#
+# [[layers]]
+# name = "Engine"
+# patterns = ["src/app/engine.rs", "src/cli/mod.rs"]
+#
+# [[layers]]
+# name = "Drivers"
+# patterns = ["src/drivers/**"]

@@ -2,7 +2,7 @@
 
 A code-to-diagram/documentation generator in Rust.
 
-> Status: Phase 2 ✅ - Multi-layout architecture generator with Rust support. Generates
+> Status: Phase 3.1 ✅ - Multi-layout architecture generator with Rust + Python support. Generates
 > documentation in multiple formats (dependency graphs, layered architecture, README summaries).
 
 ## Overview
@@ -16,6 +16,23 @@ CodeTwin transforms your codebase into visual documentation through multiple lay
 Perfect for architecture reviews, onboarding, and design documentation.
 
 ## Installation
+
+### Python (uv)
+
+Install via uv (recommended):
+
+```bash
+uv tool install codetwin
+codetwin gen --help
+```
+
+Run without installing (ephemeral):
+
+```bash
+uvx codetwin --help
+```
+
+### Rust (Cargo)
 
 You can build and run locally with Cargo (Rust toolchain required):
 
@@ -32,7 +49,7 @@ cargo run -- gen --help
 
 ## Quick Start
 
-Generate documentation for your Rust project:
+Generate documentation for your Rust or Python project:
 
 ```bash
 # Generate dependency graph (default)
@@ -46,6 +63,9 @@ ctw gen --layout readme-embedded
 
 # Watch mode: auto-regenerate on file changes
 ctw watch
+
+# Python example
+ctw gen --source examples/python_sample.py
 ```
 
 ## Layout Options
@@ -124,7 +144,7 @@ source_dirs = ["src"]
 # Output file for generated documentation
 output_file = "docs/architecture.md"
 
-# Layout: dependency-graph, layered, readme-embedded
+# Layout: dependency-graph, folder_markdown, one_per_file, layered, readme-embedded
 layout = "dependency-graph"
 
 # Patterns to exclude from scanning
@@ -134,6 +154,9 @@ exclude_patterns = [
   "**/.git/**",
   "**/tests/**"
 ]
+
+# Discovery respects nested .gitignore files (and .git/info/exclude) in addition to
+# exclude_patterns. The ignore rules apply to the directory they live in and below.
 
 # Layer configuration (for layered layout)
 [[layers]]
@@ -168,12 +191,19 @@ cargo build --release
 cargo watch -x test
 ```
 
+### Release Pipeline
+
+CodeTwin treats cargo-dist binaries as the source of truth for all CLI wrappers. The GitHub Release
+artifacts produced by cargo-dist are re-used to populate `codetwin/_bin/` before `uv build`, so the
+PyPI wheel always ships the exact same binaries that were released.
+
 ## Features
 
-✅ **Multiple Layouts** - Choose the documentation style that fits your needs ✅ **Rust Support** -
-Full tree-sitter-based AST parsing ✅ **Flexible Configuration** - Control layers, patterns, and
-output formats ✅ **Watch Mode** - Auto-regenerate on file changes ✅ **JSON Export** - Structured
-output for tooling integration ✅ **Mermaid Diagrams** - Embedded diagrams for visual understanding
+✅ **Multiple Layouts** - Choose the documentation style that fits your needs ✅ **Rust + Python
+Support** - Full tree-sitter-based AST parsing ✅ **Flexible Configuration** - Control layers,
+patterns, and output formats ✅ **Watch Mode** - Auto-regenerate on file changes ✅ **JSON
+Export** - Structured output for tooling integration ✅ **Mermaid Diagrams** - Embedded diagrams for
+visual understanding
 
 ## Repository
 

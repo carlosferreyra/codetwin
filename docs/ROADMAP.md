@@ -29,10 +29,10 @@ Phase 1 (Blocking) ✅ [COMPLETE]
   │     ├─→ Configurable Layer Defaults ✅
   │     └─→ Custom Layout Support via CLI ✅
   │
-  ├─→ Phase 3 (Multi-Language) [BLOCKED by Phase 2.5]
-  │     ├─→ Python Driver [needs Phase 2.5 complete]
-  │     ├─→ TypeScript Driver [needs Phase 2.5 complete]
-  │     └─→ Multi-Language Integration [needs Phase 2.5 + drivers]
+   ├─→ Phase 3 (Multi-Language) ✅ [Python + multi-language complete]
+   │     ├─→ Python Driver ✅
+   │     ├─→ TypeScript Driver [needs Phase 2.5 complete]
+   │     └─→ Multi-Language Integration ✅
   │
   ├─→ Phase 4 (Advanced Features) [parallel with Phase 2-3, builds on them]
   │     ├─→ 4C Model Layout [independent, phase 1+]
@@ -50,8 +50,8 @@ Phase 1 (Blocking) ✅ [COMPLETE]
 - **Phase 1 ✅ COMPLETE** - foundational infrastructure
 - **Phase 1.5 ✅ COMPLETE** - parallel parsing & structured logging now enabled
 - **Phase 2 ✅ COMPLETE** - all 3 layouts implemented (dependency-graph, layered, readme-embedded)
-- **Phase 2.5 🚀 READY** - language-agnostic refactoring ready to start, unblocks Phase 3
-- **Phase 3 BLOCKED by Phase 2.5** - needs language-agnostic layouts before multi-language drivers
+- **Phase 2.5 ✅ COMPLETE** - language-agnostic refactoring complete, unblocked Phase 3
+- **Phase 3.1 ✅ COMPLETE** - Python driver + multi-language integration delivered
 - **Phase 4 can start early but has internal dependencies**
 - **Phase 5 waits for stability** - but channels are independent
 - **Phase 1.5 benefits**: 30-50% time reduction vs sequential (improved error chains, better test
@@ -382,13 +382,14 @@ ctw gen --layout readme-embedded
 can be implemented independently. Multi-Language Integration (step 3) requires all individual
 drivers to be complete.
 
-1. [ ] **Python Driver** (`src/drivers/python.rs`)
+1. [x] **Python Driver** (`src/drivers/python.rs`)
    - Use `tree-sitter-python` for AST parsing
    - Extract: classes, functions, imports, decorators
    - Map to IR (Blueprint → Elements)
    - Handle Python-specific patterns (dunder methods, properties)
    - Leverage structured logging from Phase 1.5 for per-driver debug output
-   - Crate: `tree-sitter-python = "0.21"`
+   - Crate: `tree-sitter-python = "0.20"`
+   - **Note on Docstrings**: Manual detection (first string literal = docstring)
 
 2. [ ] **TypeScript Driver** (`src/drivers/typescript.rs`)
    - Use `tree-sitter-typescript` for AST parsing
@@ -397,7 +398,7 @@ drivers to be complete.
    - Leverage structured logging from Phase 1.5 for per-driver debug output
    - Crate: `tree-sitter-typescript = "0.21"`
 
-3. [ ] **Multi-Language Integration**
+3. [x] **Multi-Language Integration**
    - Update discovery to find .py, .ts files (already improved by Phase 1.5)
    - Allow multiple languages in same repository
    - Merge blueprints from different languages
@@ -504,11 +505,24 @@ other channels).
    - Publish to npm registry
    - Test: `npx codetwin generate`
 
-4. [ ] **PyPI (Python ecosystem)** (optional, if demand exists)
-   - Create Python wrapper using maturin/pyo3
-   - Build wheels for Linux/macOS/Windows
-   - Publish to PyPI
-   - Test: `pip install codetwin`
+4. [ ] **PyPI (Python ecosystem)** ⭐ **Primary Distribution Channel** (Post-Phase 3.1)
+   - **Strategy**: Binary wrapper pattern (not pure Python rewrite)
+   - **Package Structure**: Python package wrapping compiled Rust binary
+   - **Platforms**: Wheels for macOS (x64/arm64), Linux (x64), Windows (x64)
+   - **Build Process**:
+     1. Build Rust binary via `cargo build --release`
+     2. Create Python package `codetwin/` with wrapper `cli.py`
+     3. Embed binaries in `codetwin/_bin/` directory
+     4. Build wheel with `python -m build`
+     5. Upload to PyPI with `twine`
+   - **CLI Entry Point**: `codetwin` command available globally via `uv tool install codetwin` or
+     `uvx codetwin`
+   - **Install Methods**:
+     - Via uv: `uv tool install codetwin` then `codetwin gen`
+     - Via uv ephemeral: `uvx codetwin gen`
+     - Traditional pip: `pip install codetwin` then `codetwin gen` (works but uv preferred)
+   - **Test**: `uvx codetwin --version && uvx codetwin gen --help`
+   - **See**: AGENT_INSTRUCTIONS.md > Meta-Task 6 for detailed implementation guide
 
 5. [ ] **Scoop (Windows)** (optional)
    - Maintain bucket manifest
@@ -612,8 +626,8 @@ other channels).
 **Key Achievement**: CodeTwin layouts are now **truly language-agnostic** - ready for Python,
 TypeScript, and any other language without modification. No language-specific assumptions remain.
 
-**Next Focus**: Phase 3 (Multi-Language) can now proceed with confidence that layout infrastructure
-is generic and scalable.
+**Next Focus**: Phase 3.2 (TypeScript driver) can now proceed with confidence that layout
+infrastructure is generic and scalable.
 
 ---
 
