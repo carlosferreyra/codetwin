@@ -1,0 +1,77 @@
+name: Publish
+
+on:
+  workflow_run:
+    workflows: ['Release']
+    types:
+      - completed
+
+jobs:
+  pypi:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download cargo-dist release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          mkdir -p dist-bin
+          if [ -n "$TAG" ]; then
+            gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir dist-bin \
+              --pattern "codetwin-*.tar.xz" \
+              --pattern "codetwin-*.zip" \
+              --pattern "source.tar.gz" \
+              --pattern "sha256.sum"
+          else
+            gh release download --repo "$GITHUB_REPOSITORY" --dir dist-bin \
+              --pattern "codetwin-*.tar.xz" \
+              --pattern "codetwin-*.zip" \
+              --pattern "source.tar.gz" \
+              --pattern "sha256.sum"
+          fi
+
+      - name: Stage packaged binaries
+        run: |
+          mkdir -p codetwin/_bin
+          for archive in dist-bin/codetwin-*.tar.xz; do
+            [ -f "$archive" ] || continue
+            target=$(basename "$archive" .tar.xz | sed 's/^codetwin-//')
+            temp_dir=$(mktemp -d)
+            tar -xJf "$archive" -C "$temp_dir"
+            if [ -f "$temp_dir/codetwin" ]; then
+              cp "$temp_dir/codetwin" "codetwin/_bin/codetwin-$target"
+            fi
+            rm -rf "$temp_dir"
+          done
+
+          for archive in dist-bin/codetwin-*.zip; do
+            [ -f "$archive" ] || continue
+            target=$(basename "$archive" .zip | sed 's/^codetwin-//')
+            temp_dir=$(mktemp -d)
+            unzip -q "$archive" -d "$temp_dir"
+            if [ -f "$temp_dir/codetwin.exe" ]; then
+              cp "$temp_dir/codetwin.exe" "codetwin/_bin/codetwin-$target.exe"
+            fi
+            rm -rf "$temp_dir"
+          done
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: 'latest'
+
+      - name: Sync metadata
+        run: uv run -- python scripts/sync_pyproject.py
+
+      - name: Build
+        run: uv build
+
+      - name: Publish
+        run: uv publish
