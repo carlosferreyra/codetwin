@@ -58,4 +58,12 @@
   # No changes needed here as 'release' is now the peak performance profile
 
 [package.metadata.release]
-  pre-release-hook = ["python3", "scripts/generate_releases.py"]
+  post-release-commit-edit = true
+  pre-release-hook = [
+    "-c",
+    "bash",
+    "git-cliff --tag {{version}} --output CHANGELOG.md",
+  ]
+
+[package.metadata.dist]
+  changelog = "CHANGELOG.md"
