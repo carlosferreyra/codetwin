@@ -1,4 +1,4 @@
-use crate::ir::Blueprint;
+use crate::core::ir::Blueprint;
 use anyhow::Result;
 
 /// Layout transforms a collection of Blueprints into file outputs.

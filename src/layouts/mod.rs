@@ -7,9 +7,9 @@ pub mod trait_def;
 
 pub use trait_def::Layout;
 
-use crate::config::Config;
-use crate::ir::Blueprint;
-use anyhow::{anyhow, Context, Result};
+use crate::core::config::Config;
+use crate::core::ir::Blueprint;
+use anyhow::{Context, Result, anyhow};
 use dependency_graph::DependencyGraphLayout;
 use folder_markdown::FolderMarkdownLayout;
 use layered::LayeredLayout;
@@ -88,7 +88,7 @@ impl Layout for CustomLayout {
 
         // Add header
         if let Some(header) = &self.config.template.header {
-            content.push_str(&header);
+            content.push_str(header);
             content.push('\n');
         }
 
@@ -119,7 +119,7 @@ impl Layout for CustomLayout {
 
         // Add footer
         if let Some(footer) = &self.config.template.footer {
-            content.push_str(&footer);
+            content.push_str(footer);
             content.push('\n');
         }
 

@@ -1,5 +1,5 @@
 use super::trait_def::Layout;
-use crate::ir::{Blueprint, Element};
+use crate::core::ir::{Blueprint, Element};
 use anyhow::Result;
 use std::collections::HashMap;
 
@@ -15,15 +15,15 @@ impl Layout for ReadmeEmbeddedLayout {
 
         // Component table
         content.push_str(&generate_component_table(blueprints));
-        content.push_str("\n");
+        content.push('\n');
 
         // Mermaid diagram (compact)
         content.push_str(&generate_compact_diagram(blueprints));
-        content.push_str("\n");
+        content.push('\n');
 
         // Data flow explanation
         content.push_str(&generate_data_flow(blueprints));
-        content.push_str("\n");
+        content.push('\n');
 
         // Development guide
         content.push_str(&generate_dev_guide(blueprints));
@@ -135,15 +135,13 @@ fn generate_compact_diagram(blueprints: &[Blueprint]) -> String {
         if deps.len() >= importance_threshold {
             for dep in deps {
                 let edge_key = format!("{}->{}", module_name, dep);
-                if !added_edges.contains(&edge_key) {
-                    if nodes.contains_key(dep) {
-                        diagram.push_str(&format!(
-                            "    {} --> {}\n",
-                            sanitize_id(module_name),
-                            sanitize_id(dep)
-                        ));
-                        added_edges.insert(edge_key);
-                    }
+                if !added_edges.contains(&edge_key) && nodes.contains_key(dep) {
+                    diagram.push_str(&format!(
+                        "    {} --> {}\n",
+                        sanitize_id(module_name),
+                        sanitize_id(dep)
+                    ));
+                    added_edges.insert(edge_key);
                 }
             }
         }

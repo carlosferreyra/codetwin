@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use serde::{Deserialize, Serialize};
 /// Configuration management - reads/writes codetwin.toml
 use std::fs;
@@ -69,9 +69,10 @@ impl Config {
 source_dirs = [{}]
 
 # Output file for generated documentation
+# The parent directory is used as the output directory.
 output_file = "{}"
 
-# Layout: dependency-graph, layered, readme-embedded
+# Layout: dependency-graph, folder_markdown, one_per_file, layered, readme-embedded
 layout = "{}"
 
 # Patterns to exclude from scanning
@@ -87,11 +88,11 @@ exclude_patterns = [{}]
         toml.push_str("#\n");
         toml.push_str("# [[layers]]\n");
         toml.push_str("# name = \"Core\"\n");
-        toml.push_str("# patterns = [\"src/lib.rs\", \"src/ir.rs\"]\n");
+        toml.push_str("# patterns = [\"src/lib.rs\", \"src/core/ir.rs\"]\n");
         toml.push_str("#\n");
         toml.push_str("# [[layers]]\n");
         toml.push_str("# name = \"Engine\"\n");
-        toml.push_str("# patterns = [\"src/engine.rs\", \"src/cli.rs\"]\n");
+        toml.push_str("# patterns = [\"src/app/engine.rs\", \"src/cli/mod.rs\"]\n");
         toml.push_str("#\n");
         toml.push_str("# [[layers]]\n");
         toml.push_str("# name = \"Drivers\"\n");

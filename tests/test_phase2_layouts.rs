@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use codetwin::config::Config;
 use codetwin::ir::{
-    Blueprint, Class, Documentation, Element, Function, Method, Parameter, Signature, Visibility,
+    Blueprint, Class, Documentation, Element, Method, Parameter, Signature, Visibility,
 };
 use codetwin::layouts::get_layout;
 

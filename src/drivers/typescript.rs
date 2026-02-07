@@ -1,8 +1,8 @@
 use super::trait_def::Driver;
-use crate::drivers::LanguageTerminology;
 /// Tree-sitter logic for TypeScript
-use crate::ir::Blueprint;
-use anyhow::{anyhow, Result};
+use crate::core::ir::Blueprint;
+use crate::drivers::LanguageTerminology;
+use anyhow::{Result, anyhow};
 
 pub struct TypeScriptDriver;
 

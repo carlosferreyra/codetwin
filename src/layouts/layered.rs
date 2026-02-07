@@ -1,6 +1,7 @@
 use super::trait_def::Layout;
-use crate::config::Layer;
-use crate::ir::{Blueprint, Element};
+use crate::core::config::Layer;
+use crate::core::ir::{Blueprint, Element};
+use crate::drivers;
 use anyhow::Result;
 use glob::Pattern;
 use std::collections::HashMap;
@@ -44,7 +45,7 @@ impl Layout for LayeredLayout {
                     if matches_pattern(&path_str, pattern_str) {
                         layer_assignments
                             .entry(layer.name.clone())
-                            .or_insert_with(Vec::new)
+                            .or_default()
                             .push(blueprint);
                         assigned = true;
                         break;
@@ -94,9 +95,14 @@ impl Layout for LayeredLayout {
                         .filter(|e| matches!(e, Element::Class(_)))
                         .count();
 
+                    let terminology = drivers::terminology_for_language(&blueprint.language);
                     layer_descriptions.push_str(&format!(
-                        "- `{}` ({} structs, {} functions)\n",
-                        module_name, class_count, function_count
+                        "- `{}` ({} {}, {} {})\n",
+                        module_name,
+                        class_count,
+                        terminology.element_type_plural,
+                        function_count,
+                        terminology.function_label_plural
                     ));
 
                     // List key items
@@ -131,7 +137,7 @@ impl Layout for LayeredLayout {
                     ));
                 }
 
-                layer_descriptions.push_str("\n");
+                layer_descriptions.push('\n');
             }
         }
 
@@ -143,7 +149,7 @@ impl Layout for LayeredLayout {
                 let module_name = extract_module_name(&blueprint.source_path);
                 layer_descriptions.push_str(&format!("- `{}`\n", module_name));
             }
-            layer_descriptions.push_str("\n");
+            layer_descriptions.push('\n');
         }
 
         // Generate Mermaid diagram showing layer dependencies
@@ -161,21 +167,18 @@ fn auto_detect_layers(blueprints: &[Blueprint]) -> Vec<Layer> {
 
     for blueprint in blueprints {
         // Get parent directory name
-        if let Some(parent) = blueprint.source_path.parent() {
-            if let Some(parent_name) = parent.file_name() {
-                if let Some(dir_name) = parent_name.to_str() {
-                    layer_map
-                        .entry(dir_name.to_string())
-                        .or_insert_with(Vec::new);
-                }
-            }
+        if let Some(parent) = blueprint.source_path.parent()
+            && let Some(parent_name) = parent.file_name()
+            && let Some(dir_name) = parent_name.to_str()
+        {
+            layer_map.entry(dir_name.to_string()).or_default();
         }
     }
 
     // Convert to Layer structs, sorted by name for consistency
     let mut layers: Vec<_> = layer_map
-        .into_iter()
-        .map(|(name, _)| Layer {
+        .into_keys()
+        .map(|name| Layer {
             name: name.clone(),
             patterns: vec![format!("{}/**", name)],
         })
@@ -187,18 +190,14 @@ fn auto_detect_layers(blueprints: &[Blueprint]) -> Vec<Layer> {
 
 fn matches_pattern(path: &str, pattern_str: &str) -> bool {
     // Simple glob matching
-    if let Ok(pattern) = Pattern::new(pattern_str) {
-        if pattern.matches(path) {
-            return true;
-        }
+    if let Ok(pattern) = Pattern::new(pattern_str) && pattern.matches(path) {
+        return true;
     }
 
     // Try matching with normalized patterns
     let normalized_pattern = normalize_pattern(pattern_str);
-    if let Ok(pattern) = Pattern::new(&normalized_pattern) {
-        if pattern.matches(path) {
-            return true;
-        }
+    if let Ok(pattern) = Pattern::new(&normalized_pattern) && pattern.matches(path) {
+        return true;
     }
 
     false
@@ -207,9 +206,7 @@ fn matches_pattern(path: &str, pattern_str: &str) -> bool {
 /// Normalize glob patterns for consistency
 fn normalize_pattern(pattern: &str) -> String {
     // Convert relative paths to glob patterns
-    if pattern.contains("**") {
-        pattern.to_string()
-    } else if pattern.starts_with("src/") {
+    if pattern.contains("**") || pattern.starts_with("src/") {
         pattern.to_string()
     } else {
         format!("src/{}", pattern)

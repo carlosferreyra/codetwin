@@ -1,8 +1,9 @@
 use std::collections::BTreeMap;
 
 use super::Layout;
-use crate::ir::{Blueprint, Element, Visibility};
-use anyhow::{anyhow, Result};
+use crate::core::ir::{Blueprint, Element, Visibility};
+use crate::drivers;
+use anyhow::{Result, anyhow};
 
 pub struct FolderMarkdownLayout {
     main_diagram: String,
@@ -75,7 +76,11 @@ pub(crate) fn generate_file_md(blueprints: &[Blueprint]) -> Result<String> {
     output.push_str("\n---\n\n");
 
     if let Some(mermaid) = generate_mermaid_diagram_multi(blueprints) {
-        output.push_str("## Classes & Functions\n\n");
+        let terminology = drivers::terminology_for_language(&blueprints[0].language);
+        output.push_str(&format!(
+            "## {} & {}\n\n",
+            terminology.element_type_plural, terminology.function_label_plural
+        ));
         output.push_str("```mermaid\n");
         output.push_str(&mermaid);
         output.push_str("```\n\n");
@@ -173,6 +178,7 @@ fn generate_mermaid_diagram_multi(blueprints: &[Blueprint]) -> Option<String> {
 
         for element in &blueprint.elements {
             if let Element::Class(class) = element {
+                let terminology = drivers::terminology_for_language(&blueprint.language);
                 diagram.push_str(&format!("    class {} {{\n", class.name));
 
                 for prop in &class.properties {
@@ -196,7 +202,11 @@ fn generate_mermaid_diagram_multi(blueprints: &[Blueprint]) -> Option<String> {
                             format!("{}: {}", p.name, type_str)
                         })
                         .collect();
-                    let return_str = method.signature.return_type.as_deref().unwrap_or("void");
+                    let return_str = method
+                        .signature
+                        .return_type
+                        .as_deref()
+                        .unwrap_or(terminology.return_type_default.as_str());
 
                     diagram.push_str(&format!(
                         "        {}{}({}) {}\n",

@@ -21,3 +21,21 @@ pub fn get_driver_for_file(path: &Path) -> Option<Box<dyn Driver>> {
         _ => None,
     }
 }
+
+/// Resolve language-specific terminology without needing file paths
+pub fn terminology_for_language(language: &str) -> LanguageTerminology {
+    match language {
+        "rust" => LanguageTerminology::rust(),
+        "python" => LanguageTerminology::python(),
+        "typescript" | "javascript" => LanguageTerminology {
+            element_type_singular: "class".to_string(),
+            element_type_plural: "classes".to_string(),
+            function_label: "method".to_string(),
+            function_label_plural: "methods".to_string(),
+            return_type_default: "void".to_string(),
+            property_label: "property".to_string(),
+            property_label_plural: "properties".to_string(),
+        },
+        _ => LanguageTerminology::generic(),
+    }
+}

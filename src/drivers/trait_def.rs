@@ -1,5 +1,5 @@
 /// The Driver trait definition
-use crate::ir::Blueprint;
+use crate::core::ir::Blueprint;
 use anyhow::Result;
 
 // Defined in terminology.rs

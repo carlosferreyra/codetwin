@@ -1,5 +1,5 @@
 use super::Layout;
-use crate::ir::Blueprint;
+use crate::core::ir::Blueprint;
 use anyhow::Result;
 
 pub struct OnePerFileLayout;

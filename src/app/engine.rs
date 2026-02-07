@@ -1,10 +1,10 @@
-use crate::config::Config;
-use crate::discovery;
-use crate::drivers;
+use crate::core::config::Config;
+use crate::core::discovery;
 /// The "Brain" - SyncEngine and the Loop logic
-use crate::ir::*;
+use crate::core::ir::*;
+use crate::drivers;
 use crate::layouts;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use notify_debouncer_mini::new_debouncer;
 use notify_debouncer_mini::notify::RecursiveMode;
 use rayon::prelude::*;
@@ -78,7 +78,7 @@ impl SyncEngine {
 
         // Discover source files
         debug!("Discovering source files...");
-        let files = discovery::find_rust_files(&config.source_dirs)?;
+        let files = discovery::find_source_files(&config.source_dirs, &config.exclude_patterns)?;
         info!("Found {} source files", files.len());
 
         // Parse each file in parallel
@@ -86,10 +86,10 @@ impl SyncEngine {
         let blueprints: Vec<Blueprint> = files
             .par_iter()
             .filter_map(|file_path| {
-                match fs::read_to_string(&file_path) {
+                match fs::read_to_string(file_path) {
                     Ok(source) => {
                         // Get the appropriate driver for the file
-                        if let Some(driver) = drivers::get_driver_for_file(&file_path) {
+                        if let Some(driver) = drivers::get_driver_for_file(file_path) {
                             match driver.parse(&source) {
                                 Ok(mut blueprint) => {
                                     blueprint.source_path = file_path.clone();
@@ -132,7 +132,7 @@ impl SyncEngine {
             .unwrap_or_else(|| std::path::Path::new("docs"));
 
         debug!("Creating output directory: {}", output_dir.display());
-        fs::create_dir_all(&output_dir).context("Failed to create output dir")?;
+        fs::create_dir_all(output_dir).context("Failed to create output dir")?;
         // Apply layout or output as JSON
         if json_output {
             // Output as JSON - convert blueprints to serializable format
@@ -161,7 +161,7 @@ impl SyncEngine {
             let layout: Box<dyn layouts::Layout> = if let Some(custom_path) = custom_layout {
                 layouts::load_custom_layout(custom_path).context("Failed to load custom layout")?
             } else {
-                layouts::get_layout(&config)?
+                layouts::get_layout(config)?
             };
 
             let outputs = layout

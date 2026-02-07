@@ -1,11 +1,11 @@
 use super::trait_def::Driver;
-use crate::drivers::LanguageTerminology;
 /// Tree-sitter logic for Rust
-use crate::ir::{
+use crate::core::ir::{
     Blueprint, Class, Documentation, Element, Function, Method, Parameter, Property, Signature,
     Visibility,
 };
-use anyhow::{anyhow, Context, Result};
+use crate::drivers::LanguageTerminology;
+use anyhow::{Context, Result, anyhow};
 use std::path::PathBuf;
 use tree_sitter::{Node, Parser};
 
@@ -32,10 +32,10 @@ impl Driver for RustDriver {
 fn parse_rust_code(source: &str) -> Result<Blueprint> {
     let mut parser = Parser::new();
     // Get the Rust language from tree_sitter_rust
-    let language = tree_sitter_rust::LANGUAGE.into();
+    let language = tree_sitter_rust::language();
 
     parser
-        .set_language(&language)
+        .set_language(language)
         .context("Failed to set Rust language")?;
 
     let tree = parser
@@ -66,15 +66,13 @@ fn parse_rust_code(source: &str) -> Result<Blueprint> {
             }
             "impl_item" => {
                 // Will be handled separately and attached to classes
-                if let Ok(methods) = extract_impl_methods(&child, source) {
-                    if let Some(class_name) = get_impl_struct_name(&child, source) {
-                        if let Some(Element::Class(class)) = elements
-                            .iter_mut()
-                            .find(|e| matches!(e, Element::Class(c) if c.name == class_name))
-                        {
-                            class.methods.extend(methods);
-                        }
-                    }
+                if let Ok(methods) = extract_impl_methods(&child, source)
+                    && let Some(class_name) = get_impl_struct_name(&child, source)
+                    && let Some(Element::Class(class)) = elements
+                        .iter_mut()
+                        .find(|e| matches!(e, Element::Class(c) if c.name == class_name))
+                {
+                    class.methods.extend(methods);
                 }
             }
             _ => {}
@@ -101,7 +99,7 @@ fn extract_imports(node: &Node, source: &str) -> Result<Vec<String>, String> {
         .map(|s| s.to_string())
         .unwrap_or_default();
 
-    // Parse text like "use crate::ir::*;" or "use std::path::PathBuf;"
+    // Parse text like "use crate::core::ir::*;" or "use std::path::PathBuf;"
     if let Some(use_path) = text
         .strip_prefix("use ")
         .map(|s| s.trim_end_matches(';').trim())
@@ -112,10 +110,10 @@ fn extract_imports(node: &Node, source: &str) -> Result<Vec<String>, String> {
                 imports.push(root.to_string());
             } else if root == "crate" {
                 // For crate:: imports, try to get the first submodule
-                if let Some(submodule) = use_path.split("::").nth(1) {
-                    if !submodule.is_empty() {
-                        imports.push(submodule.to_string());
-                    }
+                if let Some(submodule) = use_path.split("::").nth(1)
+                    && !submodule.is_empty()
+                {
+                    imports.push(submodule.to_string());
                 }
             }
         }
@@ -175,19 +173,19 @@ fn extract_impl_methods(node: &Node, source: &str) -> Result<Vec<Method>> {
     let mut cursor = node.walk();
 
     for child in node.children(&mut cursor) {
-        if child.kind() == "function_item" {
-            if let Ok(sig) = extract_function_signature(&child, source) {
-                let name = get_node_text(&child, source, "name").unwrap_or_default();
-                let visibility = extract_visibility(&child, source);
+        if child.kind() == "function_item"
+            && let Ok(sig) = extract_function_signature(&child, source)
+        {
+            let name = get_node_text(&child, source, "name").unwrap_or_default();
+            let visibility = extract_visibility(&child, source);
 
-                methods.push(Method {
-                    name,
-                    visibility,
-                    is_static: false, // Can be refined to detect &self vs no self
-                    signature: sig,
-                    documentation: extract_doc_comment(&child, source),
-                });
-            }
+            methods.push(Method {
+                name,
+                visibility,
+                is_static: false, // Can be refined to detect &self vs no self
+                signature: sig,
+                documentation: extract_doc_comment(&child, source),
+            });
         }
     }
 
@@ -211,10 +209,10 @@ fn extract_struct_fields(node: &Node, source: &str) -> Vec<Property> {
     let mut cursor = node.walk();
 
     for child in node.children(&mut cursor) {
-        if child.kind() == "field_declaration" {
-            if let Ok(prop) = extract_field(&child, source) {
-                properties.push(prop);
-            }
+        if child.kind() == "field_declaration"
+            && let Ok(prop) = extract_field(&child, source)
+        {
+            properties.push(prop);
         }
     }
 
@@ -262,10 +260,10 @@ fn extract_parameters(node: &Node, source: &str) -> Vec<Parameter> {
     let mut cursor = node.walk();
 
     for child in node.children(&mut cursor) {
-        if child.kind() == "parameter" {
-            if let Ok(param) = extract_parameter(&child, source) {
-                parameters.push(param);
-            }
+        if child.kind() == "parameter"
+            && let Ok(param) = extract_parameter(&child, source)
+        {
+            parameters.push(param);
         }
     }
 

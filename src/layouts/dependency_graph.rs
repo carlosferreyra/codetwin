@@ -1,5 +1,6 @@
 use super::trait_def::Layout;
-use crate::ir::{Blueprint, Element};
+use crate::core::ir::{Blueprint, Element};
+use crate::drivers;
 use anyhow::Result;
 use petgraph::algo::is_cyclic_directed;
 use petgraph::graph::DiGraph;
@@ -15,10 +16,9 @@ impl Layout for DependencyGraphLayout {
         // Build graph: one node per module
         for blueprint in blueprints {
             let module_name = extract_module_name(&blueprint.source_path);
-            if !node_indices.contains_key(&module_name) {
-                let idx = graph.add_node(module_name.clone());
-                node_indices.insert(module_name, idx);
-            }
+                node_indices
+                    .entry(module_name.clone())
+                    .or_insert_with(|| graph.add_node(module_name.clone()));
         }
 
         // Add edges for dependencies
@@ -66,17 +66,13 @@ fn extract_module_name(path: &std::path::Path) -> String {
 fn generate_mermaid_diagram(
     graph: &DiGraph<String, ()>,
     node_indices: &HashMap<String, petgraph::graph::NodeIndex>,
-    has_cycles: bool,
+    _has_cycles: bool,
 ) -> String {
     let mut diagram = String::from("## Dependency Graph\n\n```mermaid\ngraph TD\n");
 
     // Add nodes with styling
-    for (name, _idx) in node_indices {
-        if has_cycles {
-            diagram.push_str(&format!("    {}[{}]\n", sanitize_id(name), name));
-        } else {
-            diagram.push_str(&format!("    {}[{}]\n", sanitize_id(name), name));
-        }
+    for name in node_indices.keys() {
+        diagram.push_str(&format!("    {}[{}]\n", sanitize_id(name), name));
     }
 
     // Add edges
@@ -129,26 +125,39 @@ fn generate_module_list(blueprints: &[Blueprint]) -> String {
             .filter(|e| matches!(e, Element::Function(_)))
             .count();
 
+        let terminology = drivers::terminology_for_language(&blueprint.language);
         list.push_str(&format!(
-            "**Contents**: {} structs, {} functions\n\n",
-            class_count, function_count
+            "**Contents**: {} {}, {} {}\n\n",
+            class_count,
+            terminology.element_type_plural,
+            function_count,
+            terminology.function_label_plural
         ));
 
         // Add elements summary
         if !blueprint.elements.is_empty() {
-            list.push_str("**Key Types and Functions**:\n\n");
+            list.push_str(&format!(
+                "**Key {} and {}**:\n\n",
+                terminology.element_type_plural, terminology.function_label_plural
+            ));
             for element in &blueprint.elements {
                 match element {
                     Element::Class(class) => {
-                        list.push_str(&format!("- `{}` (struct)\n", class.name));
+                        list.push_str(&format!(
+                            "- `{}` ({})\n",
+                            class.name, terminology.element_type_singular
+                        ));
                     }
                     Element::Function(func) => {
-                        list.push_str(&format!("- `{}()` (function)\n", func.name));
+                        list.push_str(&format!(
+                            "- `{}()` ({})\n",
+                            func.name, terminology.function_label
+                        ));
                     }
                     Element::Module(_) => {}
                 }
             }
-            list.push_str("\n");
+            list.push('\n');
         }
 
         // Add dependencies

@@ -17,11 +17,11 @@ fn main() {
         eprintln!("[verbose mode enabled]");
     }
 
-    if let Some(cwd) = &cli.cwd {
-        if let Err(e) = std::env::set_current_dir(cwd) {
-            eprintln!("Error: Failed to change directory to '{}': {}", cwd, e);
-            std::process::exit(1);
-        }
+    if let Some(cwd) = &cli.cwd
+        && let Err(e) = std::env::set_current_dir(cwd)
+    {
+        eprintln!("Error: Failed to change directory to '{}': {}", cwd, e);
+        std::process::exit(1);
     }
 
     let engine = SyncEngine::new();
