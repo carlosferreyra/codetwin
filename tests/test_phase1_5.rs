@@ -34,9 +34,9 @@ fn test_error_context_chains() {
 #[test]
 fn test_error_context_in_discovery() {
     // Test that discovery properly handles invalid paths
-    let result = discovery::find_rust_files(&["non_existent_directory".to_string()]);
+    let result = discovery::find_source_files(&["non_existent_directory".to_string()], &[]);
 
-    // Should either return empty vec or error with context
+    // Should either return empty or error with context
     match result {
         Ok(files) => {
             // If successful, should be empty
@@ -57,10 +57,14 @@ fn test_error_context_in_discovery() {
 fn test_discovery_excludes_target_directory() {
     // Test that discovery excludes target/ directory
     let src_files =
-        discovery::find_rust_files(&["src".to_string()]).expect("Should discover src directory");
+        discovery::find_source_files(&["src".to_string()], &Config::defaults().exclude_patterns)
+            .expect("Should discover src directory");
 
-    // Should find rust files
-    assert!(!src_files.is_empty(), "Should discover rust files in src/");
+    // Should find source files
+    assert!(
+        !src_files.is_empty(),
+        "Should discover source files in src/"
+    );
 
     // None should be in target/
     for file in &src_files {
@@ -73,22 +77,26 @@ fn test_discovery_excludes_target_directory() {
 }
 
 #[test]
-fn test_discovery_finds_rust_files() {
-    // Test that discovery finds .rs files
+fn test_discovery_finds_source_files() {
+    // Test that discovery finds supported source files
     let src_files =
-        discovery::find_rust_files(&["src".to_string()]).expect("Should discover src directory");
+        discovery::find_source_files(&["src".to_string()], &Config::defaults().exclude_patterns)
+            .expect("Should discover src directory");
 
-    // Should find at least some rust files
+    // Should find at least some source files
     assert!(
         src_files.len() > 0,
-        "Should discover at least one rust file"
+        "Should discover at least one source file"
     );
 
-    // All should be .rs files
+    // All should be supported source files
     for file in &src_files {
         assert!(
-            file.extension().map_or(false, |ext| ext == "rs"),
-            "Should only find .rs files: {:?}",
+            matches!(
+                file.extension().and_then(|ext| ext.to_str()),
+                Some("rs") | Some("py")
+            ),
+            "Should only find supported source files: {:?}",
             file
         );
     }
@@ -98,7 +106,8 @@ fn test_discovery_finds_rust_files() {
 fn test_discovery_results_sorted() {
     // Test that discovery results are sorted for consistency
     let files =
-        discovery::find_rust_files(&["src".to_string()]).expect("Should discover src directory");
+        discovery::find_source_files(&["src".to_string()], &Config::defaults().exclude_patterns)
+            .expect("Should discover src directory");
 
     // Check that results are sorted
     let mut sorted = files.clone();
@@ -184,23 +193,31 @@ fn test_element_enum_serialization() {
 fn test_logging_env_setup() {
     // Test that RUST_LOG environment variable can be set
     // This is a simple check that the environment variable works
-    env::set_var("RUST_LOG", "debug");
+    unsafe {
+        env::set_var("RUST_LOG", "debug");
+    }
     let level = env::var("RUST_LOG").expect("Should set RUST_LOG");
     assert_eq!(level, "debug");
 
     // Cleanup
-    env::remove_var("RUST_LOG");
+    unsafe {
+        env::remove_var("RUST_LOG");
+    }
 }
 
 #[test]
 fn test_logging_env_info_level() {
     // Test that RUST_LOG can be set to info level
-    env::set_var("RUST_LOG", "info");
+    unsafe {
+        env::set_var("RUST_LOG", "info");
+    }
     let level = env::var("RUST_LOG").expect("Should set RUST_LOG");
     assert_eq!(level, "info");
 
     // Cleanup
-    env::remove_var("RUST_LOG");
+    unsafe {
+        env::remove_var("RUST_LOG");
+    }
 }
 
 // ============================================================================
@@ -241,10 +258,13 @@ fn test_config_has_exclude_patterns() {
 #[test]
 fn test_discovery_consistency() {
     // Run discovery multiple times, should get same results
-    let results1 = discovery::find_rust_files(&["src".to_string()]).expect("Should discover files");
+    let results1 =
+        discovery::find_source_files(&["src".to_string()], &Config::defaults().exclude_patterns)
+            .expect("Should discover files");
 
     let results2 =
-        discovery::find_rust_files(&["src".to_string()]).expect("Should discover files again");
+        discovery::find_source_files(&["src".to_string()], &Config::defaults().exclude_patterns)
+            .expect("Should discover files again");
 
     // Results should be identical (since parallel iterators should produce same results)
     assert_eq!(
@@ -258,7 +278,7 @@ fn test_multiple_discovery_runs_same_count() {
     // Run discovery 3 times, verify consistent file count
     let counts: Vec<usize> = (0..3)
         .map(|_| {
-            discovery::find_rust_files(&["src".to_string()])
+            discovery::find_source_files(&["src".to_string()], &Config::defaults().exclude_patterns)
                 .expect("Should discover files")
                 .len()
         })
@@ -310,7 +330,7 @@ fn test_pathbuf_conversion() {
 #[test]
 fn test_empty_discovery_result() {
     // Test that discovery works on empty source list
-    let result = discovery::find_rust_files(&[]);
+    let result = discovery::find_source_files(&[], &[]);
 
     // Should either return empty or error gracefully
     match result {
@@ -329,7 +349,7 @@ fn test_config_and_discovery_integration() {
     let config = Config::defaults();
 
     // Should be able to discover files using config source_dirs
-    let files = discovery::find_rust_files(&config.source_dirs)
+    let files = discovery::find_source_files(&config.source_dirs, &config.exclude_patterns)
         .expect("Should discover files from config source directories");
 
     // Should find files (src directory should exist in test environment)

@@ -15,12 +15,13 @@ mod tests {
 
     #[test]
     fn test_find_files_from_config() {
-        use codetwin::discovery::find_rust_files;
+        use codetwin::discovery::find_source_files;
         let cfg = Config::load("codetwin.toml").expect("Failed to load config");
-        let files = find_rust_files(&cfg.source_dirs).expect("Failed to find files");
-        assert!(!files.is_empty(), "Should find .rs files");
+        let files = find_source_files(&cfg.source_dirs, &cfg.exclude_patterns)
+            .expect("Failed to find files");
+        assert!(!files.is_empty(), "Should find source files");
         println!(
-            "✅ Found {} Rust files in {:?}",
+            "✅ Found {} source files in {:?}",
             files.len(),
             cfg.source_dirs
         );
