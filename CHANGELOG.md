@@ -1,7 +1,15 @@
+## [0.1.4] - 2026-02-07
+
+### ⚙️ Miscellaneous Tasks
+
+- Include non-conventional commits in changelog
 ## [0.1.3] - 2026-02-07
 
 ### 💼 Other
 
+- Add releases generator
+- Add git-cliff changelog automation
+- Update README for ct CLI and changelog
 - Fix git-cliff hook and add hotfix group
 
 ### 📚 Documentation
@@ -11,6 +19,7 @@
 ### ⚙️ Miscellaneous Tasks
 
 - Release codetwin version 0.1.2
+- Release codetwin version 0.1.3
 ## [0.1.1] - 2026-02-07
 
 ### 🚀 Features
@@ -35,9 +44,31 @@
 - One diagram per folder, not per file
 - Correct file paths in STRUCT.md index links
 
+### 💼 Other
+
+- Add formatter abstraction with configurable layouts
+- Update roadmap with subcommand status
+- Prepare crate metadata and manual release workflow
+- Phase 1.5 Infrastructure Planning + Phase 2 Layout 1 Implementation
+
+- Add Phase 1.5 detailed breakdown with 8 meta-tasks for ecosystem integration
+- Integrate anyhow, tracing, walkdir, glob, serde_json, notify-debouncer-mini, rayon
+- Create AGENT_INSTRUCTIONS.md for structured agent implementation
+- Mark Phase 2 Layout 1 (Dependency Graph) as complete ✅
+- Implement dependency graph layout with Mermaid diagram generation
+- Add layouts module with trait-based layout system
+- Update ROADMAP.md with new dependency structure and validation criteria
+- Add integration tests for layouts
+- Refactor discovery module for upcoming Phase 1.5 work
+- Respect gitignore in discovery
+- Remove legacy discovery module
+- Update docs and config
+- Update workflows and packaging
+
 ### 🚜 Refactor
 
 - *(cli)* Show help when no subcommand provided
+- Refactor module structure
 
 ### 📚 Documentation
 
