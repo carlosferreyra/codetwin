@@ -56,3 +56,6 @@
 [profile.dist]
   inherits = "release"
   # No changes needed here as 'release' is now the peak performance profile
+
+[package.metadata.release]
+  pre-release-hook = ["python3", "scripts/generate_releases.py"]
