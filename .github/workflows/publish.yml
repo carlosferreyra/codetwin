@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Download cargo-dist release assets
         env:
@@ -69,6 +71,22 @@ jobs:
 
       - name: Sync metadata
         run: uv run -- python scripts/sync_pyproject.py
+
+      - name: Verify synced version
+        run: |
+          python - <<'PY'
+          import tomllib
+          from pathlib import Path
+
+          cargo = tomllib.loads(Path("Cargo.toml").read_text(encoding="utf-8"))
+          pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+          cargo_version = cargo.get("package", {}).get("version")
+          pyproject_version = pyproject.get("project", {}).get("version")
+          print(f"Cargo version: {cargo_version}")
+          print(f"pyproject version: {pyproject_version}")
+          if not cargo_version or not pyproject_version or cargo_version != pyproject_version:
+              raise SystemExit("Version mismatch between Cargo.toml and pyproject.toml")
+          PY
 
       - name: Build
         run: uv build
