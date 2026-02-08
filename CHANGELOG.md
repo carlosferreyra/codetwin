@@ -1,8 +1,14 @@
+## [0.1.9] - 2026-02-08
+
+### ⚙️ Miscellaneous Tasks
+
+- Update dist targets
 ## [0.1.8] - 2026-02-08
 
 ### ⚙️ Miscellaneous Tasks
 
 - Sync cargo-dist workflow
+- Release codetwin version 0.1.8
 ## [0.1.7] - 2026-02-07
 
 ### 🎨 Styling
