@@ -1,8 +1,15 @@
+## [0.1.10] - 2026-02-08
+
+### ⚙️ Miscellaneous Tasks
+
+- Pin publish checkout and verify version
+- Add metadata verification script
 ## [0.1.9] - 2026-02-08
 
 ### ⚙️ Miscellaneous Tasks
 
 - Update dist targets
+- Release codetwin version 0.1.9
 ## [0.1.8] - 2026-02-08
 
 ### ⚙️ Miscellaneous Tasks
