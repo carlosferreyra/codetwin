@@ -10,7 +10,7 @@
   readme        = "README.md"
   repository    = "https://github.com/carlosferreyra/codetwin"
   rust-version  = "1.93"
-  version       = "0.1.7"
+  version       = "0.1.8"
 
 [[bin]]
   name = "ct"

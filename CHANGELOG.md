@@ -1,3 +1,8 @@
+## [0.1.8] - 2026-02-08
+
+### ⚙️ Miscellaneous Tasks
+
+- Sync cargo-dist workflow
 ## [0.1.7] - 2026-02-07
 
 ### 🎨 Styling
@@ -7,6 +12,7 @@
 ### ⚙️ Miscellaneous Tasks
 
 - Regenerate cargo-dist workflow
+- Release codetwin version 0.1.7
 ## [0.1.6] - 2026-02-07
 
 ### ⚙️ Miscellaneous Tasks
