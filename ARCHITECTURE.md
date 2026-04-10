@@ -5,7 +5,6 @@ graph TD
     python_sample[python_sample]
 ```
 
-
 ## Modules
 
 ### `python_sample`
@@ -21,7 +20,5 @@ graph TD
 - `helper()` (def)
 
 **Dependencies**: User, dataclasses, typing
-
-
 
 ✅ No circular dependencies detected.
