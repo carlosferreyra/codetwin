@@ -227,3 +227,16 @@ exclude_patterns = [{}]
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn defaults_are_valid() {
+        let config = Config::defaults();
+        assert_eq!(config.layout, "dependency-graph");
+        assert!(!config.source_dirs.is_empty());
+        assert!(!config.output_file.is_empty());
+    }
+}
