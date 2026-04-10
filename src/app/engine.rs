@@ -82,7 +82,7 @@ impl SyncEngine {
         info!("Found {} source files", files.len());
 
         // Parse each file in parallel using rayon
-        // TODO(perf): batch files by driver type to reduce driver init overhead
+        // PERF: batching files by driver type would reduce per-file driver init cost at scale
         let source_files = files;
         debug!("Parsing code ({} files in parallel)...", source_files.len());
         let blueprints: Vec<Blueprint> = source_files
