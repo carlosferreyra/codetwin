@@ -24,6 +24,10 @@ pub struct Cli {
     #[arg(long, global = true)]
     pub json: bool,
 
+    /// Skip watch debounce delay (instant rebuild, useful for scripting)
+    #[arg(long, global = true, hide = true)]
+    pub no_debounce: bool,
+
     #[command(subcommand)]
     pub command: Option<Commands>,
 }
