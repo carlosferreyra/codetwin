@@ -1,3 +1,32 @@
+## [0.1.14] - 2026-04-10
+
+### 🚀 Features
+
+- *(cli)* Add --no-debounce flag for instant rebuild in scripting
+
+### 🐛 Bug Fixes
+
+- *(discovery)* Improve missing source directory error message
+
+### 🚜 Refactor
+
+- *(engine)* Rename files local to source_files for clarity
+
+### 📚 Documentation
+
+- Note tree-sitter parser extensibility in architecture doc
+
+### ⚡ Performance
+
+- *(engine)* Note driver batching opportunity to reduce init overhead
+
+### 🧪 Testing
+
+- *(config)* Add smoke test for default config values
+
+### ⚙️ Miscellaneous Tasks
+
+- Add *.bak to gitignore
 ## [0.1.13] - 2026-04-10
 
 ### 🐛 Bug Fixes
@@ -7,6 +36,7 @@
 ### ⚙️ Miscellaneous Tasks
 
 - *(release)* Add v prefix to release commit message
+- Release codetwin version v0.1.13
 ## [0.1.12] - 2026-04-10
 
 ### ⚙️ Miscellaneous Tasks
