@@ -81,9 +81,11 @@ impl SyncEngine {
         let files = discovery::find_source_files(&config.source_dirs, &config.exclude_patterns)?;
         info!("Found {} source files", files.len());
 
-        // Parse each file in parallel
-        debug!("Parsing code ({} files in parallel)...", files.len());
-        let blueprints: Vec<Blueprint> = files
+        // Parse each file in parallel using rayon
+        // TODO(perf): batch files by driver type to reduce driver init overhead
+        let source_files = files;
+        debug!("Parsing code ({} files in parallel)...", source_files.len());
+        let blueprints: Vec<Blueprint> = source_files
             .par_iter()
             .filter_map(|file_path| {
                 match fs::read_to_string(file_path) {
