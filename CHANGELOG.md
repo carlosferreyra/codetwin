@@ -1,3 +1,8 @@
+## [0.1.12] - 2026-04-10
+
+### ⚙️ Miscellaneous Tasks
+
+- *(dist)* Add Windows target and PowerShell installer via dist init
 ## [0.1.11] - 2026-04-10
 
 ### 🐛 Bug Fixes
