@@ -19,7 +19,7 @@ pub fn find_source_files(
         let dir = Path::new(dir_str);
 
         if !dir.exists() {
-            return Err(anyhow!("Source directory does not exist: {}", dir_str));
+            return Err(anyhow!("Source directory '{}' does not exist", dir_str));
         }
 
         if dir.is_file() {
