@@ -1,5 +1,6 @@
 /target
 /.release
+*.bak
 STRUCT.md
 docs/.codetwin.local.toml
 # Byte-compiled / optimized / DLL files
