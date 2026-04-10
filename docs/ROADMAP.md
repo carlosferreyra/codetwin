@@ -477,62 +477,42 @@ _Context, Containers, Components, Code - popular in enterprise_
 
 ---
 
-## Phase 5: Distribution & Adoption
+## Phase 5: Distribution & Adoption ✅ [COMPLETE]
 
 **Goal**: Make CodeTwin accessible across package managers
 
-**Dependencies**: [needs Phases 1-4 stable]
+**Strategy**: cargo-dist builds platform binaries and publishes a GitHub Release. Separate CI
+workflows generate and publish lightweight bootstrap wrappers for PyPI and npm. All three package
+managers install the same native binary.
 
-**Parallelization**: All distribution channels (Crates.io, Homebrew, npm, PyPI, Scoop) can be done
-in parallel once infrastructure is ready. GitHub Releases should be done first/early (dependency for
-other channels).
+### Release pipeline
 
-1. [ ] **Crates.io (Primary)**
-   - Polish Cargo.toml metadata (keywords, categories, description)
-   - Tag-based semantic versioning
-   - Publish with `cargo publish`
-   - Attach release binaries to GitHub Releases
+```text
+cargo release <version>
+  └─→ git-cliff updates CHANGELOG.md
+  └─→ tag pushed → release.yml (cargo-dist)
+        └─→ GitHub Release created with binaries
+              ├─→ release_pypi.yml → PyPI (OIDC, no token)
+              └─→ release_npm.yml  → npm  (NPM_TOKEN)
+```
 
-2. [ ] **Homebrew (macOS/Linux)**
-   - Create tap repository: `carlosferreyra/homebrew-codetwin`
-   - Formula pointing to GitHub release tarballs
-   - Automate formula updates in CI post-release
-   - Test: `brew install carlosferreyra/codetwin/codetwin`
+### Package managers ✅
 
-3. [ ] **npm (Node.js ecosystem)** (optional)
-   - Add package.json with bin entry
-   - Use binary-fetch strategy (download from GitHub releases)
-   - Publish to npm registry
-   - Test: `npx codetwin generate`
+| Manager | Command | Status |
+| --- | --- | --- |
+| Cargo | `cargo install codetwin` | ✅ via crates.io |
+| PyPI | `uv tool install codetwin` / `uvx codetwin` | ✅ live |
+| npm | `npm install -g codetwin` | ✅ live |
 
-4. [ ] **PyPI (Python ecosystem)** ⭐ **Primary Distribution Channel** (Post-Phase 3.1)
-   - **Strategy**: Binary wrapper pattern (not pure Python rewrite)
-   - **Package Structure**: Python package wrapping compiled Rust binary
-   - **Platforms**: Wheels for macOS (x64/arm64), Linux (x64), Windows (x64)
-   - **Build Process**:
-     1. Build Rust binary via `cargo build --release`
-     2. Create Python package `codetwin/` with wrapper `cli.py`
-     3. Embed binaries in `codetwin/_bin/` directory
-     4. Build wheel with `python -m build`
-     5. Upload to PyPI with `twine`
-   - **CLI Entry Point**: `codetwin` command available globally via `uv tool install codetwin` or
-     `uvx codetwin`
-   - **Install Methods**:
-     - Via uv: `uv tool install codetwin` then `codetwin gen`
-     - Via uv ephemeral: `uvx codetwin gen`
-     - Traditional pip: `pip install codetwin` then `codetwin gen` (works but uv preferred)
-   - **Test**: `uvx codetwin --version && uvx codetwin gen --help`
-   - **See**: AGENT_INSTRUCTIONS.md > Meta-Task 6 for detailed implementation guide
+### Scripts
 
-5. [ ] **Scoop (Windows)** (optional)
-   - Maintain bucket manifest
-   - Point to GitHub release binaries
-   - Test: `scoop install codetwin`
+- `scripts/release_pypi.py` — generates `.release/python/` from `Cargo.toml` at publish time
+- `scripts/release_npm.ts` — generates `.release/npm/` from `Cargo.toml` at publish time
 
-6. [ ] **GitHub Releases**
-   - CI builds binaries for: macOS (x64/arm64), Linux (x64/arm64), Windows (x64)
-   - Attach to tagged releases
-   - Include checksums for verification
+### Future distribution (optional)
+
+- [ ] **Homebrew** — tap at `carlosferreyra/homebrew-codetwin`, formula auto-updated post-release
+- [ ] **Scoop** (Windows) — bucket manifest pointing to GitHub release binaries
 
 ---
 
