@@ -1,9 +1,28 @@
+## [0.1.11] - 2026-04-10
+
+### 🐛 Bug Fixes
+
+- *(scripts)* Anchor regex to line start for Cargo.toml field extraction
+- *(docs)* Restore README text corrupted by bulk ct replacement
+
+### 🚜 Refactor
+
+- Overhaul release pipeline and rename binary to codetwin
+
+### 📚 Documentation
+
+- *(readme)* Add npm install section and restructure installation
+- *(roadmap)* Replace ctw references with codetwin
+- *(roadmap)* Mark Phase 5 complete with current release pipeline
+- Move ROADMAP.md and architecture.md to repo root
+- Fix trailing whitespace in ARCHITECTURE.md
 ## [0.1.10] - 2026-02-08
 
 ### ⚙️ Miscellaneous Tasks
 
 - Pin publish checkout and verify version
 - Add metadata verification script
+- Release codetwin version 0.1.10
 ## [0.1.9] - 2026-02-08
 
 ### ⚙️ Miscellaneous Tasks
