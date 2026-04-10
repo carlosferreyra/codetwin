@@ -1,8 +1,18 @@
+## [0.1.13] - 2026-04-10
+
+### 🐛 Bug Fixes
+
+- *(ci)* Add npm environment and fix PyPI classifier
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Add v prefix to release commit message
 ## [0.1.12] - 2026-04-10
 
 ### ⚙️ Miscellaneous Tasks
 
 - *(dist)* Add Windows target and PowerShell installer via dist init
+- Release codetwin version 0.1.12
 ## [0.1.11] - 2026-04-10
 
 ### 🐛 Bug Fixes
