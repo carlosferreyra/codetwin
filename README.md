@@ -17,13 +17,16 @@ Perfect for architecture reviews, onboarding, and design documentation.
 
 ## Installation
 
-### Python (uv)
+### Cargo
 
-Install via uv (recommended):
+```bash
+cargo install codetwin
+```
+
+### Python (uv)
 
 ```bash
 uv tool install codetwin
-codetwin gen --help
 ```
 
 Run without installing (ephemeral):
@@ -32,20 +35,14 @@ Run without installing (ephemeral):
 uvx codetwin --help
 ```
 
-### Rust (Cargo)
-
-You can build and run locally with Cargo (Rust toolchain required):
+### npm
 
 ```bash
-# From the repository root
-cargo install --path .
+npm install -g codetwin
 ```
 
-Or run directly:
-
-```bash
-cargo run -- gen --help
-```
+> All three package managers install the same native binary. On first run the npm and PyPI wrappers
+> will bootstrap the binary via the cargo-dist installer if not already present.
 
 ## Quick Start
 
