@@ -26,7 +26,7 @@ class PackageMetadata {
   static async fromCargo(): Promise<PackageMetadata> {
     const content = await Bun.file("Cargo.toml").text();
     const extract = (key: string) => {
-      const match = content.match(new RegExp(`${key}\\s*=\\s*"([^"]+)"`));
+      const match = content.match(new RegExp(`^\\s+${key}\\s*=\\s*"([^"]+)"`, "m"));
       return match ? match[1] : "";
     };
 
