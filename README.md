@@ -11,9 +11,9 @@ CodeTwin transforms your codebase into visual documentation through multiple lay
 
 - **Dependency Graph**: Shows module interdependencies
 - **Layered Architecture**: Organizes code into logical layers/tiers
-- **README-Embedded**: Compacodetwin summaries perfecodetwin for GitHub discovery
+- **README-Embedded**: Compact summaries perfect for GitHub discovery
 
-Perfecodetwin for architecture reviews, onboarding, and design documentation.
+Perfect for architecture reviews, onboarding, and design documentation.
 
 ## Installation
 
@@ -118,7 +118,7 @@ patterns = ["src/db/**", "src/models/**"]
 
 ### README-Embedded
 
-Compacodetwin summary designed for README files. Perfecodetwin for GitHub discovery and quick onboarding.
+Compact summary designed for README files. Perfect for GitHub discovery and quick onboarding.
 
 ```bash
 codetwin gen --layout readme-embedded --output docs/architecture.md
@@ -135,7 +135,7 @@ Keep output under 300 lines for easy README embedding.
 
 ## Configuration
 
-Create `codetwin.toml` in your projecodetwin root:
+Create `codetwin.toml` in your project root:
 
 ```toml
 # Source directories to scan
