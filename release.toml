@@ -9,7 +9,7 @@ pre-release-hook = [
 ]
 
 # Commit message for the version bump commit
-pre-release-commit-message = "chore: Release {{crate_name}} version {{version}}"
+pre-release-commit-message = "chore: Release {{crate_name}} version v{{version}}"
 
 # Tag name format
 tag-name = "v{{version}}"
