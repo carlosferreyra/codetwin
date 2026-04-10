@@ -77,33 +77,33 @@ Phase 1 (Blocking) ✅ [COMPLETE]
    - Example workflow:
 
      ```bash
-     ctw gen --output docs/api.md --layout layered  # Try it
+     codetwin gen --output docs/api.md --layout layered  # Try it
      # (looks good!)
      ↑ --save ⏎  # Persist it
      ```
 
    **Config Auto-Generation** (inspired by `uv` pattern):
-   - `ctw gen` always ensures config exists:
+   - `codetwin gen` always ensures config exists:
      1. Try to read `codetwin.toml`
      2. If not found → auto-run init logic (creates with defaults)
      3. Parse CLI flags (ephemeral overrides)
      4. Generate output
-   - `ctw init` explicitly creates/regenerates config (for customization or docs)
+   - `codetwin init` explicitly creates/regenerates config (for customization or docs)
      - **Idempotent behavior** (like `uv init`):
        - If `codetwin.toml` doesn't exist → create with defaults
        - If `codetwin.toml` exists → no-op (silent success, print "codetwin.toml already
          initialized")
-       - User can use `ctw init --force` or manually edit to customize
+       - User can use `codetwin init --force` or manually edit to customize
    - Both `gen` and `init` share identical `Config::defaults()` function
    - Example:
 
      ```bash
-     ctw gen                                    # Auto-creates codetwin.toml + generates
-     ctw gen --output docs/api.md               # Uses auto-created config + ephemeral flag
-     ctw gen --output docs/api.md --save        # Updates existing config + generates
-     ctw init                                   # Creates codetwin.toml if missing
-     ctw init                                   # (second run) no-op - "codetwin.toml already initialized"
-     ctw init --force                           # Overwrites existing config
+     codetwin gen                                    # Auto-creates codetwin.toml + generates
+     codetwin gen --output docs/api.md               # Uses auto-created config + ephemeral flag
+     codetwin gen --output docs/api.md --save        # Updates existing config + generates
+     codetwin init                                   # Creates codetwin.toml if missing
+     codetwin init                                   # (second run) no-op - "codetwin.toml already initialized"
+     codetwin init --force                           # Overwrites existing config
      ```
 
 2. [x] **Simplify SyncEngine**
@@ -322,7 +322,7 @@ _Best for: Design pattern analysis and architecture reviews_
 **Example Usage**:
 
 ```bash
-ctw gen --layout layered
+codetwin gen --layout layered
 ```
 
 **Configuration Example**:
@@ -358,7 +358,7 @@ _Best for: GitHub discovery and quick reference_
 **Example Usage**:
 
 ```bash
-ctw gen --layout readme-embedded
+codetwin gen --layout readme-embedded
 ```
 
 **Output Format**: ~100-200 lines, perfect for README embedding
@@ -547,8 +547,8 @@ other channels).
 - [x] **CLI Flag Implementation**: Added `--output`, `--layout`, `--source`, `--exclude`, `--save`
 - [x] **Update Config Schema**: Simplified to `source_dirs`, `output_file`, `layout`,
       `exclude_patterns`
-- [x] **Config Auto-Generation**: `ctw gen` auto-creates config with defaults
-- [x] **Init Idempotency**: `ctw init` behavior matches uv init (no-op on second run)
+- [x] **Config Auto-Generation**: `codetwin gen` auto-creates config with defaults
+- [x] **Init Idempotency**: `codetwin init` behavior matches uv init (no-op on second run)
 - [x] **Ephemeral Flags**: Flags are temporary by default, `--save` for persistence
 - [x] **Unidirectional Flow**: All bidirectional sync logic removed, code → docs only
 - [x] **Compilation**: Builds successfully on Rust 2021, all validation tests pass
