@@ -1,3 +1,5 @@
+<!-- Tree-sitter parsers handle Rust and Python AST extraction; additional languages can be added via tree-sitter grammar crates. -->
+
 ## Dependency Graph
 
 ```mermaid
