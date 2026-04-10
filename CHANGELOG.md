@@ -16,6 +16,10 @@
 - *(roadmap)* Mark Phase 5 complete with current release pipeline
 - Move ROADMAP.md and architecture.md to repo root
 - Fix trailing whitespace in ARCHITECTURE.md
+
+### ⚙️ Miscellaneous Tasks
+
+- Release codetwin version 0.1.11
 ## [0.1.10] - 2026-02-08
 
 ### ⚙️ Miscellaneous Tasks
