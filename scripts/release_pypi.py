@@ -47,7 +47,7 @@ class PackageMetadata:
             "Environment :: Console",
             "Intended Audience :: Developers",
             "Topic :: Software Development :: Documentation",
-            "Topic :: Software Development :: Libraries :: Developer Tools",
+            "Topic :: Software Development :: Libraries",
         ]
 
     @classmethod
