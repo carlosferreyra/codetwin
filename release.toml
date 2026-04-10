@@ -1,0 +1,24 @@
+# cargo-release configuration
+# https://github.com/crate-ci/cargo-release/blob/master/docs/reference.md
+
+# Run git-cliff to regenerate CHANGELOG.md before tagging
+pre-release-hook = [
+  "bash",
+  "-c",
+  "PATH=\"$HOME/.cargo/bin:$PATH\" git-cliff --tag {{version}} --output CHANGELOG.md && git add CHANGELOG.md",
+]
+
+# Commit message for the version bump commit
+pre-release-commit-message = "chore: Release {{crate_name}} version {{version}}"
+
+# Tag name format
+tag-name = "v{{version}}"
+
+# Tag message
+tag-message = "Release v{{version}}"
+
+# Push to remote after release
+push = true
+
+# Publish to crates.io
+publish = false

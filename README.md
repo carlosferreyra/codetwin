@@ -11,9 +11,9 @@ CodeTwin transforms your codebase into visual documentation through multiple lay
 
 - **Dependency Graph**: Shows module interdependencies
 - **Layered Architecture**: Organizes code into logical layers/tiers
-- **README-Embedded**: Compact summaries perfect for GitHub discovery
+- **README-Embedded**: Compacodetwin summaries perfecodetwin for GitHub discovery
 
-Perfect for architecture reviews, onboarding, and design documentation.
+Perfecodetwin for architecture reviews, onboarding, and design documentation.
 
 ## Installation
 
@@ -53,19 +53,19 @@ Generate documentation for your Rust or Python project:
 
 ```bash
 # Generate dependency graph (default)
-ct gen
+codetwin gen
 
 # Generate layered architecture
-ct gen --layout layered
+codetwin gen --layout layered
 
 # Generate README summary
-ct gen --layout readme-embedded
+codetwin gen --layout readme-embedded
 
 # Watch mode: auto-regenerate on file changes
-ct watch
+codetwin watch
 
 # Python example
-ct gen --source examples/python_sample.py
+codetwin gen --source examples/python_sample.py
 ```
 
 ## Layout Options
@@ -75,7 +75,7 @@ ct gen --source examples/python_sample.py
 Shows how modules depend on each other. Ideal for understanding coupling and module relationships.
 
 ```bash
-ct gen --layout dependency-graph --output docs/architecture.md
+codetwin gen --layout dependency-graph --output docs/architecture.md
 ```
 
 **Output includes**:
@@ -90,7 +90,7 @@ Organizes code into logical tiers (UI, API, Business Logic, Database, etc.). Bes
 reviews.
 
 ```bash
-ct gen --layout layered --output docs/layers.md
+codetwin gen --layout layered --output docs/layers.md
 ```
 
 **Output includes**:
@@ -118,10 +118,10 @@ patterns = ["src/db/**", "src/models/**"]
 
 ### README-Embedded
 
-Compact summary designed for README files. Perfect for GitHub discovery and quick onboarding.
+Compacodetwin summary designed for README files. Perfecodetwin for GitHub discovery and quick onboarding.
 
 ```bash
-ct gen --layout readme-embedded --output docs/architecture.md
+codetwin gen --layout readme-embedded --output docs/architecture.md
 ```
 
 **Output includes**:
@@ -135,7 +135,7 @@ Keep output under 300 lines for easy README embedding.
 
 ## Configuration
 
-Create `codetwin.toml` in your project root:
+Create `codetwin.toml` in your projecodetwin root:
 
 ```toml
 # Source directories to scan
@@ -193,9 +193,9 @@ cargo watch -x test
 
 ### Release Pipeline
 
-CodeTwin treats cargo-dist binaries as the source of truth for all CLI wrappers. The GitHub Release
-artifacts produced by cargo-dist are reused to populate `codetwin/_bin/` before `uv build`, so the
-PyPI wheel always ships the exact same binaries that were released.
+CodeTwin uses cargo-dist to build platform binaries. After a GitHub Release is created, separate
+workflows publish wrappers to PyPI (`uv tool install codetwin`) and npm (`npm install -g codetwin`)
+that bootstrap the binary on first run via the cargo-dist installer.
 
 ## Features
 

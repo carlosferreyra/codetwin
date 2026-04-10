@@ -2,10 +2,10 @@ use clap::{Parser, Subcommand};
 
 #[derive(Parser, Debug)]
 #[command(
-    name = "ct",
-    version = "0.1.0",
+    name = "codetwin",
+    version = env!("CARGO_PKG_VERSION"),
     about = "Code to Diagram/Documentation Generator",
-    long_about = "CodeTwin (ct) - Unidirectional code to diagram generator\nhttps://github.com/carlosferreyra/codetwin\n\nHelp developers visually understand repository structure and design patterns."
+    long_about = "CodeTwin - Unidirectional code to diagram generator\nhttps://github.com/carlosferreyra/codetwin\n\nHelp developers visually understand repository structure and design patterns."
 )]
 pub struct Cli {
     /// Enable detailed logs (e.g., scanning specific files)
