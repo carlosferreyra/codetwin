@@ -28,15 +28,14 @@ jobs:
           bun-version: latest
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: '24'
 
       - name: Generate and build npm wrapper
         run: bun run scripts/release_npm.ts
 
       - name: Publish to npm
-        run: npm publish .release/npm --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # npm v11.5.1+ supports OIDC trusted publishing natively — no token needed.
+        # Provenance is included automatically when using OIDC.
+        run: npm publish .release/npm --access public
