@@ -1,30 +1,31 @@
-use super::trait_def::Driver;
-/// Tree-sitter logic for TypeScript
-use crate::core::ir::Blueprint;
-use crate::drivers::LanguageTerminology;
-use anyhow::{Result, anyhow};
+//! TypeScript driver — NEW_ROADMAP Phase 5.a.
 
+use std::path::{Path, PathBuf};
+
+use anyhow::Result;
+
+use super::Driver;
+use crate::ir::CodeModel;
+
+/// TypeScript driver (detects `tsconfig.json` or `package.json` with a
+/// TypeScript dependency).
+#[derive(Default)]
 pub struct TypeScriptDriver;
 
 impl Driver for TypeScriptDriver {
-    fn parse(&self, _content: &str) -> Result<Blueprint> {
-        Err(anyhow!("TypeScriptDriver::parse: Not implemented yet"))
+    fn name(&self) -> &'static str {
+        "typescript"
     }
 
-    fn generate(&self, _blueprint: &Blueprint) -> Result<String> {
-        Err(anyhow!("TypeScriptDriver::generate: Not implemented yet"))
+    fn detect(&self, project_root: &Path) -> bool {
+        // TODO(Phase 5.a): also inspect package.json for a `typescript`
+        //                  entry in dependencies / devDependencies.
+        project_root.join("tsconfig.json").is_file()
     }
 
-    /// TypeScript/JavaScript-specific terminology (future Phase 3)
-    fn terminology(&self) -> LanguageTerminology {
-        LanguageTerminology {
-            element_type_singular: "class".to_string(),
-            element_type_plural: "classes".to_string(),
-            function_label: "method".to_string(),
-            function_label_plural: "methods".to_string(),
-            return_type_default: "void".to_string(),
-            property_label: "property".to_string(),
-            property_label_plural: "properties".to_string(),
-        }
+    fn parse(&self, _paths: &[PathBuf]) -> Result<CodeModel> {
+        // TODO(Phase 5.a): use `tree-sitter-typescript` to extract
+        //                  classes, interfaces, functions, exports.
+        Ok(CodeModel::new(self.name()))
     }
 }

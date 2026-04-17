@@ -1,214 +1,111 @@
 # codetwin
 
-A code-to-diagram/documentation generator in Rust.
+> Zero-config, language-agnostic CLI that turns any git repository into high-quality visual
+> documentation — useful from first `git clone` to ongoing refactoring.
 
-> Status: Phase 3.1 ✅ - Multi-layout architecture generator with Rust + Python support. Generates
-> documentation in multiple formats (dependency graphs, layered architecture, README summaries).
+> **Status**: v2 architecture scaffold. Phase 1 of [`ROADMAP.md`](ROADMAP.md) is underway; the
+> binary builds and runs end-to-end but drivers currently produce empty `CodeModel`s. See the
+> `TODO(Phase N.x)` markers in the source for concrete work items.
 
-## Overview
+---
 
-CodeTwin transforms your codebase into visual documentation through multiple layout strategies:
-
-- **Dependency Graph**: Shows module interdependencies
-- **Layered Architecture**: Organizes code into logical layers/tiers
-- **README-Embedded**: Compact summaries perfect for GitHub discovery
-
-Perfect for architecture reviews, onboarding, and design documentation.
-
-## Installation
-
-### Cargo
+## Install
 
 ```bash
-cargo install codetwin
+cargo install codetwin         # crates.io
+uv tool install codetwin       # PyPI wrapper (native binary under the hood)
+npm install -g codetwin        # npm wrapper
 ```
 
-### Python (uv)
+All three package managers install the same native binary. The npm/PyPI wrappers bootstrap the
+binary on first run via the `cargo-dist` installer.
+
+---
+
+## Quick start
 
 ```bash
-uv tool install codetwin
-```
-
-Run without installing (ephemeral):
-
-```bash
-uvx codetwin --help
-```
-
-### npm
-
-```bash
-npm install -g codetwin
-```
-
-> All three package managers install the same native binary. On first run the npm and PyPI wrappers
-> will bootstrap the binary via the cargo-dist installer if not already present.
-
-## Quick Start
-
-Generate documentation for your Rust or Python project:
-
-```bash
-# Generate dependency graph (default)
+# Zero-config run — writes docs/architecture.md with the project-overview layout.
 codetwin gen
 
-# Generate layered architecture
-codetwin gen --layout layered
+# Inspect what CodeTwin detected.
+codetwin list --drivers --layouts
 
-# Generate README summary
-codetwin gen --layout readme-embedded
+# Re-render on every filesystem change.
+codetwin gen --watch
 
-# Watch mode: auto-regenerate on file changes
-codetwin watch
+# Dump the intermediate representation as JSON.
+codetwin gen --dump-ir > codemodel.json
 
-# Python example
-codetwin gen --source examples/python_sample.py
+# Capture / diff architectural snapshots between commits.
+codetwin snapshot --ref HEAD~5
+codetwin diff HEAD~5 HEAD
 ```
 
-## Layout Options
+Global flags work on every subcommand: `--verbose`, `--quiet`, `-C/--cwd`, `--json`.
 
-### Dependency Graph (Default)
+---
 
-Shows how modules depend on each other. Ideal for understanding coupling and module relationships.
+## Layouts
 
-```bash
-codetwin gen --layout dependency-graph --output docs/architecture.md
-```
+| Name                 | Audience                              | Status       |
+| -------------------- | ------------------------------------- | ------------ |
+| `project-overview`   | Developer who just cloned the repo    | Scaffolded   |
+| `architecture-map`   | Architect reviewing the system        | Scaffolded   |
+| `c4`                 | C4-model consumers                    | Phase 6.a    |
+| `metrics`            | Coupling / circular-dep reporting     | Phase 6.b    |
 
-**Output includes**:
+`codetwin list --layouts` prints the live registry.
 
-- Module-level dependency diagram (Mermaid)
-- List of all modules with functions/structs
-- Circular dependency detection
+---
 
-### Layered Architecture
+## Configuration (`codetwin.toml`)
 
-Organizes code into logical tiers (UI, API, Business Logic, Database, etc.). Best for architecture
-reviews.
-
-```bash
-codetwin gen --layout layered --output docs/layers.md
-```
-
-**Output includes**:
-
-- Layer definitions with glob patterns
-- Modules grouped by layer
-- Inter-layer dependency diagram
-- Layer responsibilities and key functions
-
-Configure layers in `codetwin.toml`:
+Everything is optional. See the checked-in [`codetwin.toml`](codetwin.toml) for an annotated
+starting point.
 
 ```toml
-[[layers]]
-name = "User Interface"
-patterns = ["src/cli.rs", "src/ui/**"]
+source_dirs      = ["src"]
+output_file      = "docs/architecture.md"
+layout           = "project-overview"
+format           = "markdown"              # "html" is reserved for Phase 7
+exclude_patterns = ["**/target/**", "**/node_modules/**"]
+
+# Override auto-detected drivers:
+# drivers = ["rust", "python"]
 
 [[layers]]
-name = "Engine"
-patterns = ["src/engine.rs"]
-
-[[layers]]
-name = "Data Layer"
-patterns = ["src/db/**", "src/models/**"]
+name     = "CLI"
+patterns = ["src/cli/**"]
 ```
 
-### README-Embedded
-
-Compact summary designed for README files. Perfect for GitHub discovery and quick onboarding.
-
-```bash
-codetwin gen --layout readme-embedded --output docs/architecture.md
-```
-
-**Output includes**:
-
-- Component overview table (Module | Purpose | Key Functions)
-- Dependency overview diagram (Mermaid)
-- Data flow explanation (numbered steps)
-- Development guide with key files and contribution guidelines
-
-Keep output under 300 lines for easy README embedding.
-
-## Configuration
-
-Create `codetwin.toml` in your project root:
-
-```toml
-# Source directories to scan
-source_dirs = ["src"]
-
-# Output file for generated documentation
-output_file = "docs/architecture.md"
-
-# Layout: dependency-graph, folder_markdown, one_per_file, layered, readme-embedded
-layout = "dependency-graph"
-
-# Patterns to exclude from scanning
-exclude_patterns = [
-  "**/target/**",
-  "**/node_modules/**",
-  "**/.git/**",
-  "**/tests/**"
-]
-
-# Discovery respects nested .gitignore files (and .git/info/exclude) in addition to
-# exclude_patterns. The ignore rules apply to the directory they live in and below.
-
-# Layer configuration (for layered layout)
-[[layers]]
-name = "Core"
-patterns = ["src/lib.rs", "src/ir.rs"]
-
-[[layers]]
-name = "Engine"
-patterns = ["src/engine.rs"]
-```
+---
 
 ## Development
 
-- Rust edition: 2024
-- Min Rust: 1.93+ stable
-- Key deps: `tree-sitter`, `petgraph`, `serde`, `clap`
-
-Common tasks:
+Requires Rust 1.93+ (edition 2024).
 
 ```bash
-# Format & lint
 cargo fmt --all
 cargo clippy --all-targets -- -D warnings
-
-# Test
 cargo test --all
-
-# Release build
-cargo build --release
-
-# Watch for changes
-cargo watch -x test
+cargo run -- list        # exercise the CLI
 ```
 
-### Release Pipeline
+See [`tests/README.md`](tests/README.md) for the testing cheatsheet (TDD + non-TDD workflows).
 
-CodeTwin uses cargo-dist to build platform binaries. After a GitHub Release is created, separate
-workflows publish wrappers to PyPI (`uv tool install codetwin`) and npm (`npm install -g codetwin`)
-that bootstrap the binary on first run via the cargo-dist installer.
+### Release pipeline
 
-## Features
+`cargo release` → `git-cliff` → `cargo-dist`, with PyPI and npm wrapper workflows publishing
+after GitHub Releases. This is out of roadmap scope.
 
-✅ **Multiple Layouts** - Choose the documentation style that fits your needs ✅ **Rust + Python
-Support** - Full tree-sitter-based AST parsing ✅ **Flexible Configuration** - Control layers,
-patterns, and output formats ✅ **Watch Mode** - Auto-regenerate on file changes ✅ **JSON
-Export** - Structured output for tooling integration ✅ **Mermaid Diagrams** - Embedded diagrams for
-visual understanding
+---
 
 ## Repository
 
 - GitHub: <https://github.com/carlosferreyra/codetwin>
-
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for release history and notable changes.
+- Roadmap: [`ROADMAP.md`](ROADMAP.md)
+- Changelog: [`CHANGELOG.md`](CHANGELOG.md)
 
 ## License
 

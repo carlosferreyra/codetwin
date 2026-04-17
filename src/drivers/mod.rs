@@ -1,41 +1,43 @@
-pub mod markdown;
-pub mod python;
-pub mod rust;
-pub mod terminology;
-pub mod trait_def;
-pub mod typescript;
+//! Language drivers + auto-detection registry (NEW_ROADMAP Phase 1.b).
+//!
+//! Every language integration implements [`Driver`]. A [`DriverRegistry`]
+//! collects the available drivers and picks the ones whose [`Driver::detect`]
+//! returns `true` for the current project root.
 
-use std::path::Path;
-pub use terminology::LanguageTerminology;
-use trait_def::Driver;
+mod go;
+mod python;
+mod registry;
+mod rust;
+mod typescript;
 
-/// Factory: get_driver_for_file(path) -> Box<dyn Driver>
-pub fn get_driver_for_file(path: &Path) -> Option<Box<dyn Driver>> {
-    let extension = path.extension()?.to_str()?;
+pub use go::GoDriver;
+pub use python::PythonDriver;
+pub use registry::DriverRegistry;
+pub use rust::RustDriver;
+pub use typescript::TypeScriptDriver;
 
-    match extension {
-        "rs" => Some(Box::new(rust::RustDriver)),
-        "py" => Some(Box::new(python::PythonDriver)),
-        "ts" | "tsx" => Some(Box::new(typescript::TypeScriptDriver)),
-        "md" => Some(Box::new(markdown::MarkdownDriver)),
-        _ => None,
-    }
-}
+use std::path::{Path, PathBuf};
 
-/// Resolve language-specific terminology without needing file paths
-pub fn terminology_for_language(language: &str) -> LanguageTerminology {
-    match language {
-        "rust" => LanguageTerminology::rust(),
-        "python" => LanguageTerminology::python(),
-        "typescript" | "javascript" => LanguageTerminology {
-            element_type_singular: "class".to_string(),
-            element_type_plural: "classes".to_string(),
-            function_label: "method".to_string(),
-            function_label_plural: "methods".to_string(),
-            return_type_default: "void".to_string(),
-            property_label: "property".to_string(),
-            property_label_plural: "properties".to_string(),
-        },
-        _ => LanguageTerminology::generic(),
-    }
+use anyhow::Result;
+
+use crate::ir::CodeModel;
+
+/// Contract every language integration satisfies.
+///
+/// Drivers are expected to be cheap to construct: the registry creates one
+/// instance per registered driver and calls [`Driver::detect`] on it.
+pub trait Driver: Send + Sync {
+    /// Short, stable identifier (e.g. `"rust"`, `"python"`). Used for CLI
+    /// flags and `codetwin list --drivers` output.
+    fn name(&self) -> &'static str;
+
+    /// Return `true` if this driver can meaningfully parse the project at
+    /// `project_root` (usually by sniffing manifest files).
+    fn detect(&self, project_root: &Path) -> bool;
+
+    /// Parse `paths` and produce a [`CodeModel`].
+    ///
+    /// Implementations may be called from multiple threads concurrently by
+    /// the pipeline — see NEW_ROADMAP Phase 1.d.
+    fn parse(&self, paths: &[PathBuf]) -> Result<CodeModel>;
 }
