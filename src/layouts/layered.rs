@@ -190,13 +190,17 @@ fn auto_detect_layers(blueprints: &[Blueprint]) -> Vec<Layer> {
 
 fn matches_pattern(path: &str, pattern_str: &str) -> bool {
     // Simple glob matching
-    if let Ok(pattern) = Pattern::new(pattern_str) && pattern.matches(path) {
+    if let Ok(pattern) = Pattern::new(pattern_str)
+        && pattern.matches(path)
+    {
         return true;
     }
 
     // Try matching with normalized patterns
     let normalized_pattern = normalize_pattern(pattern_str);
-    if let Ok(pattern) = Pattern::new(&normalized_pattern) && pattern.matches(path) {
+    if let Ok(pattern) = Pattern::new(&normalized_pattern)
+        && pattern.matches(path)
+    {
         return true;
     }
 

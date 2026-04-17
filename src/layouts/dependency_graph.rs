@@ -16,9 +16,9 @@ impl Layout for DependencyGraphLayout {
         // Build graph: one node per module
         for blueprint in blueprints {
             let module_name = extract_module_name(&blueprint.source_path);
-                node_indices
-                    .entry(module_name.clone())
-                    .or_insert_with(|| graph.add_node(module_name.clone()));
+            node_indices
+                .entry(module_name.clone())
+                .or_insert_with(|| graph.add_node(module_name.clone()));
         }
 
         // Add edges for dependencies
