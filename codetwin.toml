@@ -1,32 +1,51 @@
-# CodeTwin Configuration
-# Code → Diagram/Documentation Generator
+# CodeTwin configuration
 # https://github.com/carlosferreyra/codetwin
+#
+# Everything in this file is optional; CodeTwin's defaults work for most
+# projects. Delete anything you don't need to customise.
 
-# Source directories to scan
+# Directories to scan for source files.
 source_dirs = ["src"]
 
-# Output file for generated documentation
-# The parent directory is used as the output directory.
+# Output file for the generated documentation.
 output_file = "docs/architecture.md"
 
-# Layout: dependency-graph, folder_markdown, one_per_file, layered, readme-embedded
-layout = "dependency-graph"
+# Layout (see `codetwin list --layouts`):
+#   - project-overview   — "I just cloned this repo, what is it?"
+#   - architecture-map   — "I'm reviewing this system"
+#   - c4                 — TODO(Phase 6.a)
+#   - metrics            — TODO(Phase 6.b)
+layout = "project-overview"
 
-# Patterns to exclude from scanning
-exclude_patterns = ["**/target/**", "**/node_modules/**", "**/.git/**", "**/tests/**"]
+# Output format: "markdown" (default) or "html" (TODO Phase 7).
+format = "markdown"
 
-# Optional: Define custom layers for layered layout
-# If omitted, layers are auto-detected from directory structure
-# Example configuration (uncomment and customize):
+# Extra glob patterns to exclude from discovery (applied on top of .gitignore).
+exclude_patterns = [
+  "**/target/**",
+  "**/node_modules/**",
+  "**/.git/**",
+  "**/dist/**",
+]
+
+# Optional: force specific drivers instead of auto-detection.
+# drivers = ["rust", "python"]
+
+# Optional: explicit layer configuration for `architecture-map`.
+# When omitted, layers are auto-detected from directory structure.
+#
+# [[layers]]
+# name = "CLI"
+# patterns = ["src/cli/**"]
 #
 # [[layers]]
 # name = "Core"
-# patterns = ["src/lib.rs", "src/core/ir.rs"]
-#
-# [[layers]]
-# name = "Engine"
-# patterns = ["src/app/engine.rs", "src/cli/mod.rs"]
+# patterns = ["src/ir/**", "src/config/**"]
 #
 # [[layers]]
 # name = "Drivers"
 # patterns = ["src/drivers/**"]
+#
+# [[layers]]
+# name = "Layouts"
+# patterns = ["src/layouts/**"]
