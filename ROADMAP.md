@@ -1,623 +1,295 @@
-# Roadmap
+# CodeTwin Roadmap
 
-> **Pivot**: CodeTwin is now a **unidirectional code → diagram/documentation generator**. Focus:
-> Help developers visually understand repository structure and design patterns.
+> **Vision**: A zero-config, language-agnostic CLI that turns any git repository into high-quality
+> visual documentation — useful from first `git clone` to ongoing refactoring.
 
----
+This roadmap supersedes the previous incremental plan. The old plan grew organically and accreted
+layouts/concepts that never paid their keep; we're starting from a clean architectural contract
+instead.
 
-## Dependency Structure & Parallelization
-
-```
-Phase 1 (Blocking) ✅ [COMPLETE]
-  ├─→ Phase 1.5 (Infrastructure & Quality) ✅ [COMPLETE]
-  │     ├─→ Error Handling & Logging ✅
-  │     ├─→ File Discovery Robustness ✅
-  │     ├─→ Watch Mode ✅
-  │     ├─→ JSON Output ✅
-  │     ├─→ Parallel Parsing Setup ✅
-  │     └─→ Integration Tests ✅ (19 tests, 100% coverage)
-  │
-  ├─→ Phase 2 (Layout Implementations) ✅ [COMPLETE - 2026-02-04]
-  │     ├─→ Layout 1: Dependency Graph ✅ [COMPLETE]
-  │     ├─→ Layout 2: Layered Architecture ✅ [COMPLETE]
-  │     ├─→ Layout 3: README-Embedded ✅ [COMPLETE]
-  │     └─→ Integration Tests (17 new tests) ✅ [COMPLETE]
-  │
-  ├─→ Phase 2.5 (Language-Agnostic Refactoring) ✅ [COMPLETE - 2026-02-05]
-  │     ├─→ Remove Hardcoded Paths ✅
-  │     ├─→ Generic Terminology System ✅
-  │     ├─→ Configurable Layer Defaults ✅
-  │     └─→ Custom Layout Support via CLI ✅
-  │
-   ├─→ Phase 3 (Multi-Language) ✅ [Python + multi-language complete]
-   │     ├─→ Python Driver ✅
-   │     ├─→ TypeScript Driver [needs Phase 2.5 complete]
-   │     └─→ Multi-Language Integration ✅
-  │
-  ├─→ Phase 4 (Advanced Features) [parallel with Phase 2-3, builds on them]
-  │     ├─→ 4C Model Layout [independent, phase 1+]
-  │     ├─→ Enhanced Dependency Graph [needs Phase 2-1]
-  │     ├─→ Diagram Customization [needs Phase 2 complete + programmatic generation]
-  │     └─→ Interactive Mode [last, needs everything]
-  │
-  └─→ Phase 5 (Distribution) [after 1-4 stable]
-        ├─→ GitHub Releases [do first]
-        └─→ Package Managers [parallel after releases]
-```
-
-**Key Insights**:
-
-- **Phase 1 ✅ COMPLETE** - foundational infrastructure
-- **Phase 1.5 ✅ COMPLETE** - parallel parsing & structured logging now enabled
-- **Phase 2 ✅ COMPLETE** - all 3 layouts implemented (dependency-graph, layered, readme-embedded)
-- **Phase 2.5 ✅ COMPLETE** - language-agnostic refactoring complete, unblocked Phase 3
-- **Phase 3.1 ✅ COMPLETE** - Python driver + multi-language integration delivered
-- **Phase 4 can start early but has internal dependencies**
-- **Phase 5 waits for stability** - but channels are independent
-- **Phase 1.5 benefits**: 30-50% time reduction vs sequential (improved error chains, better test
-  coverage, watch mode for dev workflow)
+> **History**: The first attempt at consolidation
+> ([`feat/phase1-scaffold`](https://github.com/carlosferreyra/codetwin/tree/feat/phase1-scaffold))
+> tried to bolt a `CodeModel` onto the existing `Blueprint` IR. It was dropped because the
+> two contracts disagree on what "a module" is and the glue layer was accumulating workarounds
+> faster than features. This v2 roadmap rebuilds the core from scratch so later phases plug in
+> cleanly.
 
 ---
 
-## Phase 1: Core Refactoring (Unidirectional Pivot) ✅
+## Architecture Principles
 
-**Goal**: Simplify from bidirectional sync to code → diagrams
-
-**Dependencies**: None - this is blocking for all other phases
-
-1. [x] **Refactor CLI**
-   - Rename `sync` command → `generate` (or just `gen`)
-   - Remove: `--docs-only`, `--code-only`, `--dry-run`, `--force`
-   - Keep: `generate`, `watch`, `init`
-   - Optional: Keep `list` as debug helper
-
-   **CLI Flags Design**:
-   - All flags are **ephemeral by default** (temporary override for single run)
-   - Add `--save` flag to persist overrides to `codetwin.toml`
-   - Example workflow:
-
-     ```bash
-     codetwin gen --output docs/api.md --layout layered  # Try it
-     # (looks good!)
-     ↑ --save ⏎  # Persist it
-     ```
-
-   **Config Auto-Generation** (inspired by `uv` pattern):
-   - `codetwin gen` always ensures config exists:
-     1. Try to read `codetwin.toml`
-     2. If not found → auto-run init logic (creates with defaults)
-     3. Parse CLI flags (ephemeral overrides)
-     4. Generate output
-   - `codetwin init` explicitly creates/regenerates config (for customization or docs)
-     - **Idempotent behavior** (like `uv init`):
-       - If `codetwin.toml` doesn't exist → create with defaults
-       - If `codetwin.toml` exists → no-op (silent success, print "codetwin.toml already
-         initialized")
-       - User can use `codetwin init --force` or manually edit to customize
-   - Both `gen` and `init` share identical `Config::defaults()` function
-   - Example:
-
-     ```bash
-     codetwin gen                                    # Auto-creates codetwin.toml + generates
-     codetwin gen --output docs/api.md               # Uses auto-created config + ephemeral flag
-     codetwin gen --output docs/api.md --save        # Updates existing config + generates
-     codetwin init                                   # Creates codetwin.toml if missing
-     codetwin init                                   # (second run) no-op - "codetwin.toml already initialized"
-     codetwin init --force                           # Overwrites existing config
-     ```
-
-2. [x] **Simplify SyncEngine**
-   - Rename `sync()` → `generate()`
-   - Remove bidirectional merge/conflict logic
-   - Always overwrite output (code is source of truth)
-   - Remove `check()` command (not applicable for unidirectional)
-
-3. [x] **CLI Flag Implementation**
-   - Add flags to `generate` command:
-     - `--output <PATH>`: Override output file location
-     - `--layout <NAME>`: Override layout (dependency-graph, layered, readme-embedded)
-     - `--source <DIR>`: Override source directories (can be repeated)
-     - `--exclude <PATTERN>`: Additional exclude patterns
-     - `--save`: Persist flag overrides to codetwin.toml
-   - Flag behavior:
-     - Without `--save`: flags are **ephemeral** (override for this run only, don't modify config)
-     - With `--save`: flags **persist** to codetwin.toml and become new defaults
-
-4. [x] **Update Config Schema**
-   - Simplify `codetwin.toml` structure
-   - **Config file is optional** - tool works with hardcoded defaults
-   - Sensible defaults (like uv/ruff): users rarely need to edit
-   - Keep manual layer configuration but with smart defaults
-   - Example schema with defaults:
-
-     ```toml
-     # Auto-detected or explicit
-     source_dirs = ["src/", "lib/"]
-
-     # Output configuration
-     output_file = "docs/architecture.md"
-     layout = "dependency-graph"  # or "layered", "readme-embedded", "c4"
-
-     # Exclusions (sensible defaults)
-     exclude_patterns = [
-       "**/target/**",
-       "**/node_modules/**",
-       "**/.git/**",
-       "**/tests/**"
-     ]
-
-     # Optional: Manual layer configuration (for layered layout)
-     [[layers]]
-     name = "User Interface"
-     pattern = ["main.rs", "cli.rs"]
-
-     [[layers]]
-     name = "Orchestration"
-     pattern = ["engine.rs"]
-     ```
-
-   - Implementation: Single `Config::defaults()` function used by both auto-gen and `init`
-
-5. [x] **Update Documentation**
-   - Rewrite README: "Code → Diagram Generator" not "Bidirectional Sync"
-   - Remove references to docs → code sync
-   - Update CLI help text
+- **Zero-config by default**: `codetwin gen` works out of the box; `codetwin.toml` is an optional
+  power-user knob.
+- **Driver auto-detection**: languages are detected via manifest files (`Cargo.toml`,
+  `pyproject.toml`, `package.json`, `go.mod`, ...).
+- **DRY**: prefer existing crates (`tree-sitter`, `petgraph`, `ignore`, ...) over bespoke
+  implementations.
+- **Plugin seams**: layouts and drivers are traits behind a registry — adding one never touches the
+  other.
+- **Mermaid-first for MVP**: inline Mermaid in Markdown; HTML/PlantUML/D2 are post-MVP extension
+  points.
+- **Dogfooding as a CI gate**: CodeTwin generates its own docs on every push; the binary is its
+  first user.
+- **Deterministic output**: the same `(CodeModel, Config)` must render byte-identical output. This
+  unlocks snapshot tests and diffs.
 
 ---
 
-## Phase 1 Validation ✅ Completed
+## Terminology
 
-**All 9 validation tests passed** (2026-02-04):
+| Roadmap term               | Scrum equivalent          |
+| -------------------------- | ------------------------- |
+| **Phase** (integer)        | Epic                      |
+| **Step** (lowercase alpha) | Backlog item / User story |
+| **Task** (hyphen)          | Task                      |
 
-- [x] CLI has correct subcommands (gen, watch, init, list)
-- [x] gen command has all required flags (--output, --layout, --source, --exclude, --save)
-- [x] gen auto-creates codetwin.toml with defaults on first run
-- [x] Config has required schema keys (source_dirs, output_file, layout, exclude_patterns)
-- [x] init creates config on first run
-- [x] init is idempotent (second run returns no-op message)
-- [x] gen is idempotent (consecutive runs produce identical outputs)
-- [x] Ephemeral flags don't modify config file
-- [x] --save flag persists config changes
-
-**Build Status**: ✅ Compiles cleanly, all tests pass
+Every `TODO(Phase N.x)` comment in the codebase points to a step in this document.
 
 ---
 
-## Phase 1.5: Infrastructure & Quality ✅ [COMPLETE - 2026-02-05]
+## Phase 1 — Core Engine Redesign
 
-**Goal**: Solidify foundation with ecosystem crates before multi-language & advanced features
+> Rebuild the internal pipeline so every future feature plugs in cleanly.
 
-**Status**: ✅ ALL 8 META-TASKS COMPLETE
+### a. Define the IR (`CodeModel`)
 
-**Test Results**: 31/31 tests passing (19 new Phase 1.5 integration tests + 12 existing tests)
+- [x] Sketch `CodeModel`, `Module`, `Symbol`, `Edge`, `Visibility` enums (`src/ir/`).
+- [ ] Extend `Symbol` with a structured `Signature` (parameters + return) once a layout needs it.
+- [ ] Confirm JSON round-trips cleanly (`serde_json`) — covered by `tests/ir.rs`.
+- [x] Include dependency edges (`Edge`) as first-class data (not derived).
 
-**Key Crates Added**: `anyhow`, `tracing`, `tracing-subscriber`, `walkdir`, `glob`, `serde`,
-`serde_json`, `notify-debouncer-mini`, `rayon`, `chrono`
+### b. Driver trait + auto-detection registry
 
-**Dependencies**: [needs Phase 1] ✅
+- [x] `Driver` trait: `detect`, `parse`, `name` (`src/drivers/mod.rs`).
+- [x] `DriverRegistry` with the four built-ins (`rust`, `python`, `typescript`, `go`).
+- [ ] Port existing tree-sitter Rust extraction to produce a real `CodeModel`.
+- [ ] Port existing tree-sitter Python extraction to produce a real `CodeModel`.
+- [ ] Multi-language integration test (polyglot fixture).
 
----
+### c. Layout trait + registry
 
-## Phase 1.5: Completion Summary
+- [x] `Layout` trait + `OutputFile` + `LayoutRegistry` (`src/layouts/`).
+- [x] Register `project-overview`, `architecture-map`, `c4`, `metrics` (last two scaffolded).
+- [ ] Implement layout-composition helpers so one layout can delegate sections to another.
 
-### Results by Meta-Task
+### d. Pipeline orchestration
 
-**Meta-Task 1: Cargo.toml Setup** ✅
+- [x] Discover → detect drivers → parse in parallel (rayon) → merge → render → write
+      (`src/pipeline/`).
+- [x] `--dump-ir` / `--json` dump the merged `CodeModel`.
+- [ ] Replace naive merge with de-duplication by `(module_id, symbol_name)`.
+- [ ] Preserve the ephemeral-flag + `--save` semantics (persist to `codetwin.toml`).
 
-- Added 10 ecosystem crates with correct versions
-- All crates compile and link successfully
-- Dependencies resolved with no conflicts
+### e. Configuration v2
 
-**Meta-Task 2: Error Handling (anyhow)** ✅
-
-- Migrated all `Result<T, String>` → `Result<T>` (0 instances remaining)
-- Added 25+ `.context()` calls at error boundaries
-- Error messages display helpful context chains
-
-**Meta-Task 3: Logging (tracing)** ✅
-
-- Replaced all `println!`/`eprintln!` with tracing macros
-- Structured logging with `RUST_LOG` environment variable filtering
-- Verified: `RUST_LOG=debug` shows detailed logs, `RUST_LOG=info` shows progress
-
-**Meta-Task 4: File Discovery (walkdir + glob)** ✅
-
-- Replaced manual `fs::read_dir` recursion with `WalkDir`
-- Implemented glob pattern matching for file exclusion
-- Patterns tested: `**/target/**`, `**/.git/**`, `**/tests/**`
-
-**Meta-Task 5: JSON Output (serde)** ✅
-
-- Added `#[derive(Serialize, Deserialize)]` to all IR types
-- JSON output includes blueprints, config, and timestamps
-- `--json` flag produces valid JSON with 11 blueprints from test codebase
-- Verified with `jq` JSON parser
-
-**Meta-Task 6: Watch Mode (notify-debouncer-mini)** ✅
-
-- Implemented file system monitoring with debouncing
-- Auto-regeneration on file changes
-- Configurable debounce (default 300ms)
-- Graceful Ctrl+C handling
-
-**Meta-Task 7: Parallel Parsing (rayon)** ✅
-
-- Converted sequential for-loop to `.par_iter()` pattern
-- Parallel processing with rayon thread pool
-- Output verified identical to sequential parsing
-
-**Meta-Task 8: Integration Tests** ✅
-
-- Created 19 comprehensive integration tests
-- Tests cover all Phase 1.5 features
-- 100% test pass rate (31/31 total tests)
-
-### Validation Checklist - ALL PASSING ✅
-
-```
-✅ cargo check              - PASS (0 errors)
-✅ cargo build --release    - PASS (0.80s)
-✅ cargo test --all         - PASS (31/31 tests)
-✅ Result<T, String>        - 0 instances found
-✅ JSON Output              - Valid with 11 blueprints
-✅ Logging                  - RUST_LOG filtering works
-✅ Watch Mode               - File monitoring confirmed
-✅ Parallel Parsing         - Results verified identical
-✅ File Discovery           - Glob patterns working
-```
-
-### Performance Metrics
-
-- **Generation Time**: 6ms typical (20 Rust files)
-- **Build Time**: 0.80s release build
-- **Test Suite**: <1s for 31 tests
-- **Binary Size**: 6.2 MB (reasonable for Rust CLI)
+- [x] Optional `codetwin.toml` (`Config::load_or_default`), `deny_unknown_fields`.
+- [x] Schema: `source_dirs`, `output_file`, `layout`, `format`, `exclude_patterns`, `layers`,
+      `drivers`.
+- [ ] `codetwin init --force`.
+- [x] Global `--watch` flag on `gen`, `snapshot`, `diff`.
+- [ ] Apply `exclude_patterns` (glob) on top of `.gitignore` during discovery.
 
 ---
 
-## Phase 2: Core Layout Implementations ✅ [COMPLETE - 2026-02-04]
+## Phase 2 — MVP Layouts
 
-**Goal**: Implement 3 essential layouts for different use cases
+> Two layouts that cover the two primary audiences.
 
-**Status**: ✅ ALL LAYOUTS COMPLETE
+### a. `project-overview`
 
-**Completion Summary**:
+- Target: a developer who just ran `git clone`.
+- Sections: project summary, module table, dependency diagram (Mermaid), numbered data-flow
+  narrative, quick-start dev guide, "key files".
+- Output: single Markdown file, < 300 lines for typical projects.
+- Auto-detect entrypoints (`main`, `lib`, `index`, `__main__`) and trace outward.
 
-- ✅ **Layout 1: Dependency Graph** - Shows module interdependencies
-- ✅ **Layout 2: Layered Architecture** - Organizes code into logical layers
-- ✅ **Layout 3: README-Embedded** - Compact summaries for README discovery
-- ✅ **Integration Tests** - 17 comprehensive Phase 2 tests + 19 existing Phase 1.5 tests
-- ✅ **Documentation** - README.md and CLI help updated
-- ✅ **Performance** - All layouts generate in <350ms (well under 1s requirement)
-- ✅ **Code Quality** - cargo fmt applied, clippy warnings fixed
+### b. `architecture-map`
 
-**Test Results**: 56/56 tests passing (13 unit + 43 integration)
+- Target: architect / tech lead reviewing system structure.
+- Sections: high-level Mermaid diagram, layer breakdown, per-layer module detail, coupling metrics
+  (fan-in / fan-out), circular-dependency warnings (via `petgraph::algo::tarjan_scc`).
+- Manual layer config via `[[layers]]`; auto-detect when absent.
 
-**Dependencies**: [needs Phase 1] ✅ [benefits from Phase 1.5] ✅
+### c. Shared render helpers
 
-**Parallelization**: Layout 1 (Dependency Graph) ✅ COMPLETE. Layouts 2 & 3 ✅ COMPLETE in parallel.
+- [x] `render::markdown::MarkdownBuilder` skeleton.
+- [x] `render::mermaid::graph_td` skeleton.
+- [ ] Table, collapsible `<details>`, code-fence, and subgraph helpers.
 
----
+### d. Integration tests
 
-## Phase 2 Details: Core Layout Implementations
-
-### Layout 2: Layered Architecture ✅
-
-_Best for: Design pattern analysis and architecture reviews_
-
-✅ **Status**: COMPLETE
-
-**Completed**:
-
-1. ✅ Created `src/layouts/layered.rs` with `LayeredLayout` struct
-2. ✅ Added `LayerConfig` struct with `patterns` vec to `src/config.rs`
-3. ✅ Implemented layer matching algorithm with glob pattern support
-4. ✅ Auto-detection of default layers (Core, Engine, Drivers, I/O, Layouts, Config)
-5. ✅ Generates Mermaid diagram showing layers as subgraphs with inter-layer dependencies
-6. ✅ Prose section per layer with module listings and key functions
-7. ✅ Added comprehensive unit and integration tests
-8. ✅ Registered in layout registry (`layouts::get_layout()`)
-9. ✅ CLI flag works: `--layout layered`
-
-**Example Usage**:
-
-```bash
-codetwin gen --layout layered
-```
-
-**Configuration Example**:
-
-```toml
-[[layers]]
-name = "User Interface"
-patterns = ["src/cli.rs", "src/ui/**"]
-
-[[layers]]
-name = "Business Logic"
-patterns = ["src/engine.rs", "src/core/**"]
-```
-
-### Layout 3: README-Embedded ✅
-
-_Best for: GitHub discovery and quick reference_
-
-✅ **Status**: COMPLETE
-
-**Completed**:
-
-1. ✅ Created `src/layouts/readme_embedded.rs`
-2. ✅ Generates component overview table (Module | Purpose | Key Functions)
-3. ✅ Includes compact Mermaid dependency diagram (<30 lines)
-4. ✅ Data flow explanation with numbered steps (entry point → output)
-5. ✅ Development guide section with key files and contribution guidelines
-6. ✅ Output optimized for compactness (<300 lines for typical projects)
-7. ✅ Added comprehensive tests for all sections
-8. ✅ Registered in layout registry
-9. ✅ CLI flag works: `--layout readme-embedded`
-
-**Example Usage**:
-
-```bash
-codetwin gen --layout readme-embedded
-```
-
-**Output Format**: ~100-200 lines, perfect for README embedding
+- Snapshot-style assertions for every layout against fixture repos.
+- Regression tests: assert output is deterministic.
 
 ---
 
-## Phase 3: Multi-Language Support
+## Phase 3 — Dogfooding & Quality Gate
 
-**Goal**: Extend beyond Rust to popular languages
+### a. Self-documentation CI job
 
-**Dependencies**: [needs Phase 1] ✅ + [benefits significantly from Phase 1.5 infrastructure]
+- CI step runs both MVP layouts against the CodeTwin repo; non-zero exit fails the build.
+- Generated docs are committed to `docs/` on every merge.
+- Diff against the previous commit's output; flag unexpectedly large changes.
 
-**Refactoring with Phase 1.5 Benefits**:
+### b. Manual validation checklist
 
-- Parallel parsing (`rayon`) now critical: 3+ languages per file means 3x parsing workload
-- Structured logging (`tracing`) prevents log spam from multiple driver instances
-- Error handling (`anyhow`) provides better error chains when parser fails across languages
-- File discovery (`walkdir` + `glob`) already supports `.py`, `.ts`, `.rs` extensions
+- `docs/VALIDATION.md` with a reviewer checklist.
+- Track per-release validation in `docs/VALIDATION_LOG.md`.
 
-**Parallelization**: Can be done in parallel with Phase 2 Layouts 2-3. Python and TypeScript drivers
-can be implemented independently. Multi-Language Integration (step 3) requires all individual
-drivers to be complete.
+### c. Fixture-based functional tests
 
-1. [x] **Python Driver** (`src/drivers/python.rs`)
-   - Use `tree-sitter-python` for AST parsing
-   - Extract: classes, functions, imports, decorators
-   - Map to IR (Blueprint → Elements)
-   - Handle Python-specific patterns (dunder methods, properties)
-   - Leverage structured logging from Phase 1.5 for per-driver debug output
-   - Crate: `tree-sitter-python = "0.20"`
-   - **Note on Docstrings**: Manual detection (first string literal = docstring)
-
-2. [ ] **TypeScript Driver** (`src/drivers/typescript.rs`)
-   - Use `tree-sitter-typescript` for AST parsing
-   - Extract: classes, interfaces, functions, imports, exports
-   - Handle TypeScript-specific: generics, type annotations, namespaces
-   - Leverage structured logging from Phase 1.5 for per-driver debug output
-   - Crate: `tree-sitter-typescript = "0.21"`
-
-3. [x] **Multi-Language Integration**
-   - Update discovery to find .py, .ts files (already improved by Phase 1.5)
-   - Allow multiple languages in same repository
-   - Merge blueprints from different languages
-   - Parallel parsing now handles 3+ file types without slowdown (Phase 1.5 rayon)
-   - Test: polyglot repository (Rust + Python + TypeScript)
-
-4. [ ] **Optional Language Drivers** (future)
-   - Go: tree-sitter-go
-   - Java: tree-sitter-java
-   - C++: tree-sitter-cpp
-   - Crates: `tree-sitter-go`, `tree-sitter-java`, `tree-sitter-cpp`
+- Fixtures for: minimal Rust, minimal Python, polyglot, monorepo. Assert end-to-end output per
+  layout.
 
 ---
 
-## Phase 4: Advanced Layouts & Features
+## Phase 4 — Architecture Diff
 
-**Goal**: Support advanced documentation strategies
+### a. Snapshot capture
 
-**Dependencies**: [needs Phase 1 + Phase 2 (mostly)]
+- `codetwin snapshot [--ref <COMMIT>] [--watch]` writes `.codetwin/snapshots/<short>.json`.
 
-**Integration Notes**:
+### b. Diff engine
 
-- **4C Model Layout** [needs Phase 1]: Independent layout alongside Phase 2, can start in parallel
-  or after
-- **Enhanced Dependency Graph** [needs Phase 2 Layout 1]: Builds on Dependency Graph implementation
-- **Diagram Customization** [needs Phase 2 (all layouts)]: Requires layout infrastructure to be
-  mature
-- **Interactive Mode** [needs Phase 2 + Diagram Customization]: Most advanced, do last
+- `codetwin diff [REF_A] [REF_B]` (defaults: last snapshot → working tree).
+- Computes added / removed / renamed modules, changed edges, changed public-API surface.
+- Ignores cosmetic changes (comments, formatting, ordering).
 
-### 4C Model Layout (C4 Architecture Diagrams)
+### c. Diff output
 
-_Context, Containers, Components, Code - popular in enterprise_
+- Markdown with summary + side-by-side before/after Mermaid + change list.
+- Color-coded nodes (green / red / yellow) via Mermaid `classDef`.
+- `--json` for programmatic consumption.
 
-1. [ ] Research C4 model thoroughly (Simon Brown's C4 Architecture)
-2. [ ] Create `src/layouts/c4.rs`
-3. [ ] **Level 1 - System Context**: User-configured in `codetwin.toml` (manual, not extracted)
-4. [ ] **Level 2 - Containers**: Detect deployment units (bin vs lib crates, multiple binaries)
-5. [ ] **Level 3 - Components**: Auto-extract major subsystems (folders/modules grouping)
-6. [ ] **Level 4 - Code**: Class diagrams per component (current capability)
-7. [ ] Generate separate markdown file per C4 level
-8. [ ] Support C4-PlantUML syntax (if Mermaid insufficient)
-9. [ ] Add tests: verify 4-level hierarchy generation
-10. [ ] Document: "Enterprise-grade architecture documentation using C4 model"
+### d. Integration tests
 
-### Enhanced Dependency Graph
-
-1. [ ] **Circular Dependency Detection**
-   - Highlight cycles in red on diagram
-   - Warn in output: "⚠ Circular dependency detected: A → B → C → A"
-   - Use structured logging (Phase 1.5) to emit detection events
-
-2. [ ] **Dependency Metrics**
-   - Calculate coupling metrics per module
-   - Identify "hub" modules (high fan-in/fan-out)
-   - Suggest refactoring opportunities
-   - Export metrics as JSON (Phase 1.5 serde_json) for CI integration
-
-3. [ ] **Interactive Mode** (optional, future)
-   - Generate HTML with clickable nodes
-   - Hover to see module details
-   - Filter by layer or language
-   - Requires Phase 1.5 JSON output (feedable to frontend)
-
-### Diagram Customization
-
-1. [ ] **Mermaid Theme Support**
-   - Allow theme selection in config: `default`, `dark`, `forest`, `neutral`
-   - Custom color schemes per layer
-   - Use `mermaid-rs` for programmatic diagram generation (replaces hand-coded templates)
-   - Crate: `mermaid-rs` (or `graphviz-rust` for DOT export)
-
-2. [ ] **Diagram Export Formats**
-   - Mermaid → SVG (using `mermaid-rs` or mermaid CLI wrapper)
-   - Mermaid → PNG (via mermaid CLI)
-   - JSON export (for downstream tools) - already supported via Phase 1.5
+- Fixture with two commits; assert the diff captures exactly the expected deltas.
 
 ---
 
-## Phase 5: Distribution & Adoption ✅ [COMPLETE]
+## Phase 5 — Additional Drivers
 
-**Goal**: Make CodeTwin accessible across package managers
+### a. TypeScript driver
 
-**Strategy**: cargo-dist builds platform binaries and publishes a GitHub Release. Separate CI
-workflows generate and publish lightweight bootstrap wrappers for PyPI and npm. All three package
-managers install the same native binary.
+- `tree-sitter-typescript`; extract classes, interfaces, functions, exports, type aliases, generics.
+- Detect via `tsconfig.json` or `package.json` with a `typescript` dependency.
 
-### Release pipeline
+### b. Go driver
+
+- `tree-sitter-go`; extract structs, interfaces, functions, methods, packages.
+- Detect via `go.mod`.
+
+### c. Driver contribution guide
+
+- `docs/CONTRIBUTING_DRIVERS.md` — "a new driver should be ~1 file + 1 fixture".
+
+---
+
+## Phase 6 — Advanced Layouts & Features
+
+### a. C4 Model layout
+
+- System Context (manual), Container (auto), Component (auto), Code (symbols).
+
+### b. Coupling & metrics layout
+
+- Coupling matrix, hub modules, circular-dep report, module size distribution.
+- `--json` for CI integration (fail build if thresholds exceeded).
+
+### c. Mermaid theming
+
+- `theme` config key: `default`, `dark`, `forest`, `neutral`, or custom overrides.
+
+### d. Multi-file output
+
+- `--multi-file`: one file per module/layer, plus an index file.
+
+---
+
+## Phase 7 — HTML & Interactive Output
+
+### a. HTML renderer
+
+- `--format html`; static single-page HTML with inline Mermaid SVG.
+
+### b. Interactive features
+
+- Clickable nodes, search/filter, hover tooltips, collapsible sections.
+
+### c. Live preview
+
+- `codetwin gen --format html --watch` serves a local HTTP page with live reload.
+
+---
+
+## Phase Summary
+
+| Phase | Focus                                                 | Audience               |
+| ----- | ----------------------------------------------------- | ---------------------- |
+| 1     | Core engine redesign (IR, drivers, layouts, pipeline) | Foundation             |
+| 2     | MVP layouts: project-overview + architecture-map      | Developers, architects |
+| 3     | Dogfooding CI gate + test suite                       | Quality assurance      |
+| 4     | Architecture diff between commits                     | Developers refactoring |
+| 5     | Additional language drivers                           | Polyglot repos         |
+| 6     | Advanced layouts, metrics, theming                    | Power users            |
+| 7     | HTML & interactive output                             | Teams, presentations   |
+
+---
+
+## CLI Surface
 
 ```text
-cargo release <version>
-  └─→ git-cliff updates CHANGELOG.md
-  └─→ tag pushed → release.yml (cargo-dist)
-        └─→ GitHub Release created with binaries
-              ├─→ release_pypi.yml → PyPI (OIDC, no token)
-              └─→ release_npm.yml  → npm  (NPM_TOKEN)
+codetwin gen [OPTIONS]
+    --layout <NAME>          project-overview | architecture-map | c4 | metrics
+    --output <PATH>          Output file path
+    --format <FMT>           markdown (default) | html (Phase 7)
+    --source <DIR>...        Override source directories
+    --exclude <PATTERN>...   Additional exclude patterns
+    --drivers <NAME>...      Override auto-detected drivers
+    --dump-ir                Dump the merged CodeModel as JSON
+    --multi-file             One output file per module/layer (Phase 6.d)
+    --watch                  Re-run on filesystem changes
+    --save                   Persist flag values to codetwin.toml
+
+codetwin init [--force]
+
+codetwin snapshot [--ref <COMMIT>] [--watch]
+
+codetwin diff [REF_A] [REF_B] [--watch]
+
+codetwin list [--drivers] [--layouts]
 ```
 
-### Package managers ✅
+Global flags (on every subcommand): `--verbose`, `--quiet`, `-C/--cwd`, `--json`.
 
-| Manager | Command | Status |
-| --- | --- | --- |
-| Cargo | `cargo install codetwin` | ✅ via crates.io |
-| PyPI | `uv tool install codetwin` / `uvx codetwin` | ✅ live |
-| npm | `npm install -g codetwin` | ✅ live |
-
-### Scripts
-
-- `scripts/release_pypi.py` — generates `.release/python/` from `Cargo.toml` at publish time
-- `scripts/release_npm.ts` — generates `.release/npm/` from `Cargo.toml` at publish time
-
-### Future distribution (optional)
-
-- [ ] **Homebrew** — tap at `carlosferreyra/homebrew-codetwin`, formula auto-updated post-release
-- [ ] **Scoop** (Windows) — bucket manifest pointing to GitHub release binaries
+> **Entrypoint `codetwin` is immutable** — already published on crates.io, PyPI, and npm.
 
 ---
 
-## Completed ✅
+## What Stays From Current Implementation
 
-### Phase 1: Core Refactoring (Unidirectional Pivot)
+- **Release pipeline**: `cargo release` + `git-cliff` + `cargo-dist` + PyPI/npm wrappers remain
+  unchanged.
+- **Config shape**: optional `codetwin.toml`, ephemeral flags + `--save`.
+- **Core crates**: `tree-sitter`, `petgraph`, `rayon`, `serde`, `clap`, `anyhow`, `tracing`,
+  `walkdir`, `ignore`, `glob`, `notify-debouncer-mini`.
 
-**Completed**: 2026-02-04
+## What Changes
 
-- [x] **Refactor CLI**: Renamed `sync` → `gen`, removed bidirectional flags
-- [x] **Simplify SyncEngine**: Renamed `sync()` → `generate()`, removed all merge logic
-- [x] **CLI Flag Implementation**: Added `--output`, `--layout`, `--source`, `--exclude`, `--save`
-- [x] **Update Config Schema**: Simplified to `source_dirs`, `output_file`, `layout`,
-      `exclude_patterns`
-- [x] **Config Auto-Generation**: `codetwin gen` auto-creates config with defaults
-- [x] **Init Idempotency**: `codetwin init` behavior matches uv init (no-op on second run)
-- [x] **Ephemeral Flags**: Flags are temporary by default, `--save` for persistence
-- [x] **Unidirectional Flow**: All bidirectional sync logic removed, code → docs only
-- [x] **Compilation**: Builds successfully on Rust 2021, all validation tests pass
-
-### Layout Infrastructure
-
-- [x] Define `Layout` trait that takes `Vec<Blueprint>` and returns `Vec<(filename, content)>`
-- [x] Add layout registry/factory (`layouts::get_layout(name)`) with default
-- [x] Move folder-based markdown logic into `layouts/folder_markdown.rs`
-- [x] Wire `codetwin.toml` to choose layout
-- [x] Update `SyncEngine::generate()` to call selected layout
-- [x] Add tests: layout selection, filename outputs, content generation
-
-### Core Functionality
-
-- [x] Rust driver with tree-sitter (extracts structs, functions, impl blocks)
-- [x] IR (Intermediate Representation) for cross-language abstraction
-- [x] Configuration management (`codetwin.toml` read/write)
-- [x] File discovery (recursive `.rs` file finding with skip patterns)
-- [x] `init` command (scaffolds project structure)
-- [x] `generate` command (code → docs generation)
-
-### Phase 2 - Layout 1: Dependency Graph
-
-**Completed**: 2026-02-04
-
-- [x] Create `src/layouts/dependency_graph.rs`
-- [x] Extract module imports from IR (Rust: `use` statements)
-- [x] Build directed graph of module dependencies using `petgraph`
-- [x] Generate Mermaid `graph TD` diagram
-- [x] Embed in markdown with module descriptions
-- [x] Set as default layout in config
-- [x] Add tests: verify graph structure, edge cases
-- [x] Documentation: "Shows how modules connect and data flows"
-
-### Phase 2.5: Language-Agnostic Refactoring
-
-**Completed**: 2026-02-05
-
-**Status**: ✅ ALL META-TASKS COMPLETE - Ready for Phase 3 (Multi-Language)
-
-**Test Results**: 50/50 tests passing (including 7 new Phase 2.5 tests)
-
-**Completed Meta-Tasks**:
-
-1. ✅ **Meta-Task 1: Remove Hardcoded Paths**
-   - `generate_index_md()` now generates dynamic diagrams from actual blueprints
-   - Removed all hardcoded module references (no `main[main.rs]`, `cli[cli.rs]`, etc.)
-   - Verified: `grep "main\[main.rs\]" src/layouts/` returns 0 matches
-
-2. ✅ **Meta-Task 2: Generic Terminology System**
-   - Created `src/drivers/terminology.rs` with `LanguageTerminology` struct
-   - Centralized generic defaults: "types", "items", "—"
-   - RustDriver overrides with language-specific: "structs", "fns", "()"
-   - Future-proof architecture documented for Python, Go, Haskell drivers
-   - Generic terminology used by default throughout layouts
-
-3. ✅ **Meta-Task 3: Configurable Layer Defaults**
-   - `LayeredLayout::defaults()` now returns `vec![]` (empty)
-   - Auto-detection implemented for layering by directory structure
-   - Layers optional in config with `#[serde(default)]`
-   - Works without configuration - auto-detects from codebase structure
-
-4. ✅ **Meta-Task 4: Custom Layout Support**
-   - Added `--custom-layout` CLI flag in `src/cli.rs`
-   - Implemented custom layout loader in `src/layouts/mod.rs`
-   - Supports TOML-based custom templates with IR field references
-   - Validation with helpful error messages
-
-5. ✅ **Meta-Task 5: Integration Tests**
-   - Created `tests/test_phase2_5.rs` with 7 comprehensive tests
-   - Tests cover all meta-tasks: hardcoded paths, terminology, auto-detection, custom layouts
-   - All 50 tests passing (19 Phase 1.5 + 17 Phase 2 + 7 Phase 2.5 + legacy)
-
-**Key Achievement**: CodeTwin layouts are now **truly language-agnostic** - ready for Python,
-TypeScript, and any other language without modification. No language-specific assumptions remain.
-
-**Next Focus**: Phase 3.2 (TypeScript driver) can now proceed with confidence that layout
-infrastructure is generic and scalable.
+- **IR rebuilt** as `CodeModel` with dependency edges as first-class data (no more `Blueprint`).
+- **Driver system** formalised as trait + auto-detection registry.
+- **Layout system** formalised as trait + registry; the three pre-pivot layouts are dropped in
+  favour of two purpose-built MVP layouts.
+- **`watch` subcommand** removed; `--watch` is a global flag on `gen`, `snapshot`, `diff`.
+- **New subcommands**: `snapshot`, `diff`.
+- **`list` subcommand** extended with `--drivers` / `--layouts`.
+- **Minimum Rust version** bumped to match the `edition = "2024"` toolchain.
 
 ---
 
-## Future Exploration (Post-Phase 5)
+## How to Contribute
 
-- [ ] Watch mode with live-reload (browser preview)
-- [ ] GitHub Action for auto-updating docs on push
-- [ ] VS Code extension (sidebar preview of architecture)
-- [ ] Diff visualization (show architecture changes between commits)
-- [ ] PlantUML support (if Mermaid limitations discovered)
-- [ ] Custom template system (user-defined markdown templates)
-- [ ] Monorepo support (workspace-aware diagram generation)
-- [ ] API server mode (REST API for programmatic access)
+1. Pick a `TODO(Phase N.x)` comment in the source — every one corresponds to a concrete step above.
+2. Add a test under `tests/` (see [`tests/README.md`](tests/README.md) for the cheatsheet).
+3. Run `cargo fmt --all && cargo clippy --all-targets -- -D warnings && cargo test --all`.
+4. Open a PR against `dev`; keep each PR scoped to a single step.
