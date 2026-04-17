@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - "feat/**"
+      - 'feat/**'
   pull_request:
 
 jobs:

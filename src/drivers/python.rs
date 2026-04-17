@@ -470,7 +470,9 @@ fn extract_decorators(node: &Node, source: &str) -> Vec<String> {
     let mut cursor = node.walk();
 
     for child in node.named_children(&mut cursor) {
-        if child.kind() == "decorator" && let Ok(text) = child.utf8_text(source.as_bytes()) {
+        if child.kind() == "decorator"
+            && let Ok(text) = child.utf8_text(source.as_bytes())
+        {
             let trimmed = text.trim().trim_start_matches('@');
             let name = trimmed
                 .split('(')
