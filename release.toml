@@ -21,4 +21,4 @@ tag-message = "Release v{{version}}"
 push = true
 
 # Publish to crates.io
-publish = false
+publish = true
