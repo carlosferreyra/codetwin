@@ -65,8 +65,9 @@ jobs:
       - name: Run tests
         run: cargo test
 
-  build:
-    name: Build
+  doc:
+    name: Docs
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -80,5 +81,5 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
-      - name: Build
-        run: cargo build
+      - name: Build docs
+        run: cargo doc --no-deps
