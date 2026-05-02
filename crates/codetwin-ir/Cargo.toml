@@ -1,0 +1,17 @@
+[package]
+  description  = "CodeTwin intermediate representation: CodeModel, Module, Symbol, Edge."
+  edition      = { workspace = true }
+  license      = { workspace = true }
+  name         = "codetwin-ir"
+  publish      = false
+  repository   = { workspace = true }
+  rust-version = { workspace = true }
+  version      = { workspace = true }
+
+[lib]
+  name = "codetwin_ir"
+  path = "src/lib.rs"
+
+[dependencies]
+  serde      = { workspace = true }
+  serde_json = { workspace = true }

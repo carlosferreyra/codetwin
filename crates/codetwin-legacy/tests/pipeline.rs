@@ -1,7 +1,7 @@
 //! End-to-end pipeline tests in a `TempDir`.
 
-use codetwin::config::Config;
-use codetwin::pipeline;
+use codetwin_legacy::config::Config;
+use codetwin_legacy::pipeline;
 use tempfile::TempDir;
 
 #[test]
@@ -40,7 +40,7 @@ fn discover_tolerates_missing_source_dir() {
 #[test]
 #[ignore = "touches the real filesystem; run with --include-ignored"]
 fn gen_end_to_end_produces_output_file() {
-    use codetwin::pipeline::GenOptions;
+    use codetwin_legacy::pipeline::GenOptions;
 
     let dir = TempDir::new().unwrap();
     let src = dir.path().join("src");

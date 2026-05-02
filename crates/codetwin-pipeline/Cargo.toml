@@ -1,0 +1,28 @@
+[package]
+  description  = "CodeTwin orchestration: discover → parse → merge → render → write, plus snapshot, diff, and watch."
+  edition      = { workspace = true }
+  license      = { workspace = true }
+  name         = "codetwin-pipeline"
+  publish      = false
+  repository   = { workspace = true }
+  rust-version = { workspace = true }
+  version      = { workspace = true }
+
+[lib]
+  name = "codetwin_pipeline"
+  path = "src/lib.rs"
+
+[dependencies]
+  anyhow                = { workspace = true }
+  codetwin-config       = { workspace = true }
+  codetwin-drivers      = { workspace = true }
+  codetwin-ir           = { workspace = true }
+  codetwin-render       = { workspace = true }
+  glob                  = { workspace = true }
+  ignore                = { workspace = true }
+  notify-debouncer-mini = { workspace = true }
+  rayon                 = { workspace = true }
+  serde_json            = { workspace = true }
+  thiserror             = { workspace = true }
+  tracing               = { workspace = true }
+  walkdir               = { workspace = true }

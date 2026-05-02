@@ -1,0 +1,21 @@
+[package]
+  description  = "CodeTwin language drivers and auto-detection registry (tree-sitter)."
+  edition      = { workspace = true }
+  license      = { workspace = true }
+  name         = "codetwin-drivers"
+  publish      = false
+  repository   = { workspace = true }
+  rust-version = { workspace = true }
+  version      = { workspace = true }
+
+[lib]
+  name = "codetwin_drivers"
+  path = "src/lib.rs"
+
+[dependencies]
+  anyhow             = { workspace = true }
+  codetwin-ir        = { workspace = true }
+  thiserror          = { workspace = true }
+  tree-sitter        = { workspace = true }
+  tree-sitter-python = { workspace = true }
+  tree-sitter-rust   = { workspace = true }

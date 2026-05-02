@@ -1,6 +1,6 @@
 //! Driver registry detection + lookup (NEW_ROADMAP Phase 1.b).
 
-use codetwin::drivers::DriverRegistry;
+use codetwin_legacy::drivers::DriverRegistry;
 use pretty_assertions::assert_eq;
 use tempfile::TempDir;
 

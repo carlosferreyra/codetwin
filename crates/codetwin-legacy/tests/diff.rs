@@ -1,7 +1,7 @@
 //! Structural diff smoke tests (NEW_ROADMAP Phase 4.b).
 
-use codetwin::diff::diff;
-use codetwin::ir::CodeModel;
+use codetwin_legacy::diff::diff;
+use codetwin_legacy::ir::CodeModel;
 
 #[test]
 fn diffing_identical_models_returns_no_changes() {

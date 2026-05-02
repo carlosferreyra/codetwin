@@ -1,7 +1,7 @@
 //! `SnapshotStore` round-trip (NEW_ROADMAP Phase 4.a).
 
-use codetwin::ir::{CodeModel, Module, ModuleId};
-use codetwin::snapshot::SnapshotStore;
+use codetwin_legacy::ir::{CodeModel, Module, ModuleId};
+use codetwin_legacy::snapshot::SnapshotStore;
 use pretty_assertions::assert_eq;
 use tempfile::TempDir;
 

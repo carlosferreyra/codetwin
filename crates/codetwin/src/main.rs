@@ -6,7 +6,7 @@
 
 use anyhow::Result;
 use clap::Parser;
-use codetwin::cli::{Cli, Command, dispatch};
+use codetwin_legacy::cli::{Cli, Command, dispatch};
 
 fn main() {
     if let Err(err) = run() {

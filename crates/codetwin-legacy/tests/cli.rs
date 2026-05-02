@@ -1,7 +1,7 @@
 //! CLI argument parsing (no subprocess — uses `clap::Parser::try_parse_from`).
 
 use clap::Parser;
-use codetwin::cli::{Cli, Command};
+use codetwin_legacy::cli::{Cli, Command};
 
 #[test]
 fn bare_invocation_has_no_subcommand() {

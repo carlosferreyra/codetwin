@@ -1,0 +1,19 @@
+[package]
+  description  = "CodeTwin output rendering: Markdown, Mermaid, and Layout trait + built-in layouts."
+  edition      = { workspace = true }
+  license      = { workspace = true }
+  name         = "codetwin-render"
+  publish      = false
+  repository   = { workspace = true }
+  rust-version = { workspace = true }
+  version      = { workspace = true }
+
+[lib]
+  name = "codetwin_render"
+  path = "src/lib.rs"
+
+[dependencies]
+  anyhow      = { workspace = true }
+  codetwin-ir = { workspace = true }
+  petgraph    = { workspace = true }
+  thiserror   = { workspace = true }

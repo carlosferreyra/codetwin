@@ -1,8 +1,8 @@
 //! Layout registry + MVP layout smoke tests (NEW_ROADMAP Phase 1.c + Phase 2).
 
-use codetwin::config::Config;
-use codetwin::ir::CodeModel;
-use codetwin::layouts::LayoutRegistry;
+use codetwin_legacy::config::Config;
+use codetwin_legacy::ir::CodeModel;
+use codetwin_legacy::layouts::LayoutRegistry;
 
 #[test]
 fn default_registry_lists_all_layouts() {
