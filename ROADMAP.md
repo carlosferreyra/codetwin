@@ -81,9 +81,9 @@ the full index and dependency DAG):
 
 ### b. Move `ir/` → `codetwin-ir`
 
-- [ ] Lift `codetwin-legacy::ir` into `codetwin-ir`. Update legacy re-exports so call sites keep
+- [x] Lift `codetwin-legacy::ir` into `codetwin-ir`. Update legacy re-exports so call sites keep
       compiling.
-- [ ] Move `tests/ir.rs` to `crates/codetwin-ir/tests/`.
+- [x] Move `tests/ir.rs` to `crates/codetwin-ir/tests/`.
 
 ### c. Move `config/` → `codetwin-config`
 

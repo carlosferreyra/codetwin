@@ -1,8 +1,6 @@
 //! IR serde round-trips and merge semantics (NEW_ROADMAP Phase 1.a).
 
-use codetwin_legacy::ir::{
-    CodeModel, Edge, EdgeKind, Module, ModuleId, Symbol, SymbolKind, Visibility,
-};
+use codetwin_ir::{CodeModel, Edge, EdgeKind, Module, ModuleId, Symbol, SymbolKind, Visibility};
 use pretty_assertions::assert_eq;
 
 fn sample_module() -> Module {

@@ -31,7 +31,7 @@ pub mod cli;
 pub mod config;
 pub mod diff;
 pub mod drivers;
-pub mod ir;
+pub use codetwin_ir as ir;
 pub mod layouts;
 pub mod pipeline;
 pub mod render;

@@ -189,6 +189,7 @@ dependencies = [
 name = "codetwin-ir"
 version = "0.2.0"
 dependencies = [
+ "pretty_assertions",
  "serde",
  "serde_json",
 ]
@@ -199,6 +200,7 @@ version = "0.2.0"
 dependencies = [
  "anyhow",
  "clap",
+ "codetwin-ir",
  "glob",
  "ignore",
  "notify-debouncer-mini",

@@ -16,6 +16,7 @@ pub fn graph_td(model: &CodeModel) -> String {
             EdgeKind::Implements => "==>",
             EdgeKind::Extends => "==>",
             EdgeKind::Calls => "-->",
+            _ => "-->",
         };
         out.push_str(&format!(
             "  {} {} {}\n",
