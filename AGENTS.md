@@ -86,3 +86,19 @@ No `--no-verify`. If a hook fails, fix the cause.
 ## 10. When in doubt
 
 Stop and ask. Surfacing a tradeoff costs one message; an out-of-scope rewrite costs a session.
+
+## Agent skills
+
+### Issue tracker
+
+Issues tracked in GitHub Issues at `carlosferreyra/codetwin` via the `gh` CLI. See
+`docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default canonical labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`,
+`wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
