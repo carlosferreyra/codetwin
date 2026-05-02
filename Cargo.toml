@@ -1,26 +1,25 @@
-[package]
-  autobins      = false
-  categories    = ["command-line-utilities", "development-tools"]
-  description   = "Zero-config, language-agnostic CLI that turns any git repository into high-quality visual documentation."
-  documentation = "https://docs.rs/codetwin"
-  edition       = "2024"
-  keywords      = ["architecture", "cli", "docs", "documentation", "generator"]
-  license       = "MIT"
-  name          = "codetwin"
-  readme        = "README.md"
-  repository    = "https://github.com/carlosferreyra/codetwin"
-  rust-version  = "1.93"
-  version       = "0.2.0"
+[workspace]
+  members  = ["crates/*"]
+  resolver = "2"
 
-[[bin]]
-  name = "codetwin"
-  path = "src/main.rs"
+[workspace.package]
+  edition      = "2024"
+  license      = "MIT"
+  repository   = "https://github.com/carlosferreyra/codetwin"
+  rust-version = "1.93"
+  version      = "0.2.0"
 
-[lib]
-  name = "codetwin"
-  path = "src/lib.rs"
+[workspace.dependencies]
+  # Internal crates — referenced by other workspace members via `path`.
+  codetwin-cli      = { path = "crates/codetwin-cli" }
+  codetwin-config   = { path = "crates/codetwin-config" }
+  codetwin-drivers  = { path = "crates/codetwin-drivers" }
+  codetwin-ir       = { path = "crates/codetwin-ir" }
+  codetwin-legacy   = { path = "crates/codetwin-legacy" }
+  codetwin-pipeline = { path = "crates/codetwin-pipeline" }
+  codetwin-render   = { path = "crates/codetwin-render" }
 
-[dependencies]
+  # External crates — pinned once here, inherited by members via `workspace = true`.
   anyhow                = "1.0"
   clap                  = { version = "4.5", features = ["derive"] }
   glob                  = "0.3"
@@ -39,16 +38,14 @@
   tree-sitter-rust      = "0.20"
   walkdir               = "2.4"
 
-[dev-dependencies]
+  # Dev-only.
   pretty_assertions = "1.4"
   tempfile          = "3.10"
 
 [profile.dev]
-  debug     = true # Keep full debug info for development
-  opt-level = 0    # Fast compiles for iteration
+  debug     = true
+  opt-level = 0
 
-# Maximize speed for dependencies ONLY, so tree-sitter / petgraph
-# aren't sluggish during `cargo run`.
 [profile.dev.package."*"]
   opt-level = 3
 
@@ -61,6 +58,3 @@
 
 [profile.dist]
   inherits = "release"
-
-[package.metadata.dist]
-  changelog = "CHANGELOG.md"

@@ -1,0 +1,19 @@
+[package]
+  description  = "CodeTwin configuration schema and loader (codetwin.toml)."
+  edition      = { workspace = true }
+  license      = { workspace = true }
+  name         = "codetwin-config"
+  publish      = false
+  repository   = { workspace = true }
+  rust-version = { workspace = true }
+  version      = { workspace = true }
+
+[lib]
+  name = "codetwin_config"
+  path = "src/lib.rs"
+
+[dependencies]
+  anyhow    = { workspace = true }
+  serde     = { workspace = true }
+  thiserror = { workspace = true }
+  toml      = { workspace = true }

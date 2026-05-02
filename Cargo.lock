@@ -147,6 +147,58 @@ version = "0.2.0"
 dependencies = [
  "anyhow",
  "clap",
+ "codetwin-legacy",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "codetwin-cli"
+version = "0.2.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "codetwin-config",
+ "codetwin-pipeline",
+ "tracing",
+]
+
+[[package]]
+name = "codetwin-config"
+version = "0.2.0"
+dependencies = [
+ "anyhow",
+ "serde",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
+name = "codetwin-drivers"
+version = "0.2.0"
+dependencies = [
+ "anyhow",
+ "codetwin-ir",
+ "thiserror",
+ "tree-sitter",
+ "tree-sitter-python",
+ "tree-sitter-rust",
+]
+
+[[package]]
+name = "codetwin-ir"
+version = "0.2.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "codetwin-legacy"
+version = "0.2.0"
+dependencies = [
+ "anyhow",
+ "clap",
  "glob",
  "ignore",
  "notify-debouncer-mini",
@@ -159,11 +211,39 @@ dependencies = [
  "thiserror",
  "toml",
  "tracing",
- "tracing-subscriber",
  "tree-sitter",
  "tree-sitter-python",
  "tree-sitter-rust",
  "walkdir",
+]
+
+[[package]]
+name = "codetwin-pipeline"
+version = "0.2.0"
+dependencies = [
+ "anyhow",
+ "codetwin-config",
+ "codetwin-drivers",
+ "codetwin-ir",
+ "codetwin-render",
+ "glob",
+ "ignore",
+ "notify-debouncer-mini",
+ "rayon",
+ "serde_json",
+ "thiserror",
+ "tracing",
+ "walkdir",
+]
+
+[[package]]
+name = "codetwin-render"
+version = "0.2.0"
+dependencies = [
+ "anyhow",
+ "codetwin-ir",
+ "petgraph",
+ "thiserror",
 ]
 
 [[package]]

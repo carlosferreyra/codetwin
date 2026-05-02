@@ -9,10 +9,9 @@ instead.
 
 > **History**: The first attempt at consolidation
 > ([`feat/phase1-scaffold`](https://github.com/carlosferreyra/codetwin/tree/feat/phase1-scaffold))
-> tried to bolt a `CodeModel` onto the existing `Blueprint` IR. It was dropped because the
-> two contracts disagree on what "a module" is and the glue layer was accumulating workarounds
-> faster than features. This v2 roadmap rebuilds the core from scratch so later phases plug in
-> cleanly.
+> tried to bolt a `CodeModel` onto the existing `Blueprint` IR. It was dropped because the two
+> contracts disagree on what "a module" is and the glue layer was accumulating workarounds faster
+> than features. This v2 roadmap rebuilds the core from scratch so later phases plug in cleanly.
 
 ---
 
@@ -47,20 +46,94 @@ Every `TODO(Phase N.x)` comment in the codebase points to a step in this documen
 
 ---
 
+## Phase 0 — Workspace migration
+
+> Decompose the monolith into a uv-style Cargo workspace before Phase 1 work resumes. Pre-alpha —
+> destructive moves are allowed.
+
+The target shape lives under [`crates/`](crates/) (see [`crates/README.md`](crates/README.md) for
+the full index and dependency DAG):
+
+| Crate               | Owns                                                             |
+| ------------------- | ---------------------------------------------------------------- |
+| `codetwin`          | Bin only (`main.rs`)                                             |
+| `codetwin-cli`      | `clap` surface + dispatch                                        |
+| `codetwin-pipeline` | Discover → parse → merge → render → write; snapshot; diff; watch |
+| `codetwin-render`   | Markdown / Mermaid + `Layout` trait + layouts                    |
+| `codetwin-drivers`  | `Driver` trait + per-language tree-sitter drivers                |
+| `codetwin-config`   | `codetwin.toml` schema + loader                                  |
+| `codetwin-ir`       | `CodeModel`, `Module`, `Symbol`, `Edge`                          |
+| `codetwin-legacy`   | Transitional monolith — emptied during Phase 0                   |
+
+### a. Skeleton (done)
+
+- [x] Root `Cargo.toml` is workspace-only (no `[package]`).
+- [x] `[workspace.package]` and `[workspace.dependencies]` centralise version and external dep pins.
+- [x] `crates/codetwin/` holds the bin (`main.rs`); depends on `codetwin-legacy` until Phase 0
+      completes.
+- [x] `crates/codetwin-{ir,config,drivers,render,pipeline,cli}/` exist as empty shells with intent
+      docs and pre-wired internal deps.
+- [x] `crates/codetwin-legacy/` holds the existing `lib.rs` and integration tests verbatim, renamed
+      to `codetwin_legacy`.
+- [x] `dist-workspace.toml` targets `cargo:crates/codetwin`.
+- [x] `cargo build --workspace`, `cargo clippy --all-targets -- -D warnings`, `cargo test --all` all
+      green.
+
+### b. Move `ir/` → `codetwin-ir`
+
+- [ ] Lift `codetwin-legacy::ir` into `codetwin-ir`. Update legacy re-exports so call sites keep
+      compiling.
+- [ ] Move `tests/ir.rs` to `crates/codetwin-ir/tests/`.
+
+### c. Move `config/` → `codetwin-config`
+
+- [ ] Lift `codetwin-legacy::config` into `codetwin-config`.
+- [ ] Move `tests/config.rs` to `crates/codetwin-config/tests/`.
+
+### d. Move `drivers/` → `codetwin-drivers`
+
+- [ ] Lift `codetwin-legacy::drivers` into `codetwin-drivers`.
+- [ ] Move `tests/drivers.rs` to `crates/codetwin-drivers/tests/`.
+
+### e. Move `render/` + `layouts/` → `codetwin-render`
+
+- [ ] Lift `codetwin-legacy::{render,layouts}` into `codetwin-render`.
+- [ ] Move `tests/layouts.rs` to `crates/codetwin-render/tests/`.
+
+### f. Move `pipeline/`, `snapshot/`, `diff/`, `watch/` → `codetwin-pipeline`
+
+- [ ] Lift the four modules into `codetwin-pipeline`.
+- [ ] Move `tests/{pipeline,snapshot,diff}.rs` to `crates/codetwin-pipeline/tests/`.
+- [ ] Fold `util/` into wherever it is actually used; do not promote it to a cross-cutting crate.
+
+### g. Move `cli/` → `codetwin-cli`; retire `codetwin-legacy`
+
+- [ ] Lift `codetwin-legacy::cli` into `codetwin-cli`.
+- [ ] Switch `crates/codetwin/Cargo.toml` to depend on `codetwin-cli` instead of `codetwin-legacy`.
+      Update `main.rs` import.
+- [ ] Move `tests/cli.rs` to `crates/codetwin-cli/tests/`.
+- [ ] Delete `crates/codetwin-legacy/` and its workspace entry.
+
+Each step (b–g) is a single commit. Tree must stay green at every step.
+
+---
+
 ## Phase 1 — Core Engine Redesign
 
-> Rebuild the internal pipeline so every future feature plugs in cleanly.
+> Rebuild the internal pipeline so every future feature plugs in cleanly. Path references below are
+> written against the post-Phase-0 layout. Until a module has migrated out, it still lives under
+> `crates/codetwin-legacy/src/<old-path>/`.
 
 ### a. Define the IR (`CodeModel`)
 
-- [x] Sketch `CodeModel`, `Module`, `Symbol`, `Edge`, `Visibility` enums (`src/ir/`).
+- [x] Sketch `CodeModel`, `Module`, `Symbol`, `Edge`, `Visibility` enums (`codetwin-ir`).
 - [ ] Extend `Symbol` with a structured `Signature` (parameters + return) once a layout needs it.
 - [ ] Confirm JSON round-trips cleanly (`serde_json`) — covered by `tests/ir.rs`.
 - [x] Include dependency edges (`Edge`) as first-class data (not derived).
 
 ### b. Driver trait + auto-detection registry
 
-- [x] `Driver` trait: `detect`, `parse`, `name` (`src/drivers/mod.rs`).
+- [x] `Driver` trait: `detect`, `parse`, `name` (`codetwin-drivers`).
 - [x] `DriverRegistry` with the four built-ins (`rust`, `python`, `typescript`, `go`).
 - [ ] Port existing tree-sitter Rust extraction to produce a real `CodeModel`.
 - [ ] Port existing tree-sitter Python extraction to produce a real `CodeModel`.
@@ -68,14 +141,14 @@ Every `TODO(Phase N.x)` comment in the codebase points to a step in this documen
 
 ### c. Layout trait + registry
 
-- [x] `Layout` trait + `OutputFile` + `LayoutRegistry` (`src/layouts/`).
+- [x] `Layout` trait + `OutputFile` + `LayoutRegistry` (`codetwin-render`).
 - [x] Register `project-overview`, `architecture-map`, `c4`, `metrics` (last two scaffolded).
 - [ ] Implement layout-composition helpers so one layout can delegate sections to another.
 
 ### d. Pipeline orchestration
 
 - [x] Discover → detect drivers → parse in parallel (rayon) → merge → render → write
-      (`src/pipeline/`).
+      (`codetwin-pipeline`).
 - [x] `--dump-ir` / `--json` dump the merged `CodeModel`.
 - [ ] Replace naive merge with de-duplication by `(module_id, symbol_name)`.
 - [ ] Preserve the ephemeral-flag + `--save` semantics (persist to `codetwin.toml`).
@@ -276,6 +349,8 @@ Global flags (on every subcommand): `--verbose`, `--quiet`, `-C/--cwd`, `--json`
 
 ## What Changes
 
+- **Repo layout rebuilt** as a uv-style Cargo workspace under `crates/` (see Phase 0 and
+  [`crates/README.md`](crates/README.md)).
 - **IR rebuilt** as `CodeModel` with dependency edges as first-class data (no more `Blueprint`).
 - **Driver system** formalised as trait + auto-detection registry.
 - **Layout system** formalised as trait + registry; the three pre-pivot layouts are dropped in

@@ -1,0 +1,26 @@
+[package]
+  categories    = ["command-line-utilities", "development-tools"]
+  description   = "Zero-config, language-agnostic CLI that turns any git repository into high-quality visual documentation."
+  documentation = "https://docs.rs/codetwin"
+  edition       = { workspace = true }
+  keywords      = ["architecture", "cli", "docs", "documentation", "generator"]
+  license       = { workspace = true }
+  name          = "codetwin"
+  readme        = "../../README.md"
+  repository    = { workspace = true }
+  rust-version  = { workspace = true }
+  version       = { workspace = true }
+
+[[bin]]
+  name = "codetwin"
+  path = "src/main.rs"
+
+[dependencies]
+  anyhow             = { workspace = true }
+  clap               = { workspace = true }
+  codetwin-legacy    = { workspace = true }
+  tracing            = { workspace = true }
+  tracing-subscriber = { workspace = true }
+
+[package.metadata.dist]
+  changelog = "../../CHANGELOG.md"

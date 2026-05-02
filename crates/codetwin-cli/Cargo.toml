@@ -1,0 +1,20 @@
+[package]
+  description  = "CodeTwin CLI surface (clap-derived) and subcommand dispatch."
+  edition      = { workspace = true }
+  license      = { workspace = true }
+  name         = "codetwin-cli"
+  publish      = false
+  repository   = { workspace = true }
+  rust-version = { workspace = true }
+  version      = { workspace = true }
+
+[lib]
+  name = "codetwin_cli"
+  path = "src/lib.rs"
+
+[dependencies]
+  anyhow            = { workspace = true }
+  clap              = { workspace = true }
+  codetwin-config   = { workspace = true }
+  codetwin-pipeline = { workspace = true }
+  tracing           = { workspace = true }
