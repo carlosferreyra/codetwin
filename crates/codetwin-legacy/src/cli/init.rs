@@ -6,7 +6,7 @@ use super::InitArgs;
 use crate::config::Config;
 
 /// Entry point for `codetwin init`.
-pub fn run(args: InitArgs) -> Result<()> {
+pub(super) fn run(args: &InitArgs) -> Result<()> {
     // TODO(Phase 1.e): honour `--force`; bail with a friendly message when
     //                  `codetwin.toml` already exists and `--force` is unset.
     let _ = args.force;

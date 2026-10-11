@@ -67,6 +67,7 @@ pub enum Command {
 
 /// Arguments for `codetwin gen`.
 #[derive(Debug, Args, Default, Clone)]
+#[allow(clippy::struct_excessive_bools)] // Independent Clap switches, not domain state.
 pub struct GenArgs {
     /// Layout to render (`project-overview`, `architecture-map`, ...).
     #[arg(long, value_name = "NAME")]
@@ -164,9 +165,9 @@ pub struct ListArgs {
 pub fn dispatch(command: Command, json: bool) -> Result<()> {
     match command {
         Command::Gen(args) => generate::run(args, json),
-        Command::Init(args) => init::run(args),
+        Command::Init(args) => init::run(&args),
         Command::Snapshot(args) => snapshot::run(args, json),
         Command::Diff(args) => diff::run(args, json),
-        Command::List(args) => list::run(args, json),
+        Command::List(args) => list::run(&args, json),
     }
 }

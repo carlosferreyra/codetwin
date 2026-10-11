@@ -1,6 +1,6 @@
-//! Driver registry detection + lookup (NEW_ROADMAP Phase 1.b).
+//! Driver registry detection + lookup (`NEW_ROADMAP` Phase 1.b).
 
-use codetwin_legacy::drivers::DriverRegistry;
+use codetwin_legacy::drivers::{Driver, DriverRegistry};
 use pretty_assertions::assert_eq;
 use tempfile::TempDir;
 
@@ -18,7 +18,7 @@ fn detects_rust_by_cargo_toml() {
     let active: Vec<_> = DriverRegistry::default()
         .detect_all(dir.path())
         .into_iter()
-        .map(|d| d.name())
+        .map(Driver::name)
         .collect();
     assert_eq!(active, vec!["rust"]);
 }
@@ -35,7 +35,7 @@ fn detects_python_by_pyproject_toml() {
     let active: Vec<_> = DriverRegistry::default()
         .detect_all(dir.path())
         .into_iter()
-        .map(|d| d.name())
+        .map(Driver::name)
         .collect();
     assert_eq!(active, vec!["python"]);
 }
@@ -49,7 +49,7 @@ fn polyglot_project_activates_multiple_drivers() {
     let active: Vec<_> = DriverRegistry::default()
         .detect_all(dir.path())
         .into_iter()
-        .map(|d| d.name())
+        .map(Driver::name)
         .collect();
     assert!(active.contains(&"rust"));
     assert!(active.contains(&"python"));

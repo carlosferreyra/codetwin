@@ -7,7 +7,7 @@ use crate::config::Config;
 use crate::pipeline::{self, GenOptions};
 
 /// Entry point for `codetwin gen`.
-pub fn run(args: GenArgs, json: bool) -> Result<()> {
+pub(super) fn run(args: GenArgs, json: bool) -> Result<()> {
     let mut config = Config::load_or_default()?;
     apply_overrides(&mut config, &args);
 
@@ -30,7 +30,7 @@ pub fn run(args: GenArgs, json: bool) -> Result<()> {
 
 fn apply_overrides(config: &mut Config, args: &GenArgs) {
     if let Some(layout) = &args.layout {
-        config.layout = layout.clone();
+        config.layout.clone_from(layout);
     }
     if let Some(output) = &args.output {
         config.output_file = output.clone().into();

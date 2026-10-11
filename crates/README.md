@@ -4,6 +4,9 @@ CodeTwin is organised as a Cargo workspace. Each crate has one job and a
 narrow public surface. New crates are added when a real seam appears (two
 adapters, not one).
 
+Private development automation lives at `tools/xtask`, outside the product crates. Its commands
+run checks and scaffold roadmap-approved capabilities; it is not part of the shipped binary.
+
 ## Index
 
 | Crate                                          | Role                                                                              | Depends on                                                                |
@@ -43,6 +46,8 @@ one. Adding an upward edge needs an explicit ADR.
 - **External deps**: declared once in `[workspace.dependencies]` at the root,
   inherited by members with `{ workspace = true }`. Adding a new external
   dependency is a workspace-level decision (see [AGENTS.md §7](../AGENTS.md)).
+- **Lint policy**: declared in `[workspace.lints]` and inherited with `[lints] workspace = true`.
+  CodeTwin forbids unsafe code and enables the template's Rust and Clippy warning policies.
 - **Internal deps**: also declared in `[workspace.dependencies]` with `path =
   "..."`. Members reference them with `{ workspace = true }`.
 - **No cyclic deps**: enforced by Cargo. If you find yourself wanting one,

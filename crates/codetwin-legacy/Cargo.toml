@@ -1,6 +1,8 @@
 [package]
   description  = "Internal monolith crate — being decomposed into codetwin-{ir,config,drivers,render,pipeline,cli}. Not published."
+  authors      = { workspace = true }
   edition      = { workspace = true }
+  homepage     = { workspace = true }
   license      = { workspace = true }
   name         = "codetwin-legacy"
   publish      = false
@@ -36,3 +38,6 @@
 [dev-dependencies]
   pretty_assertions = { workspace = true }
   tempfile          = { workspace = true }
+
+[lints]
+  workspace = true

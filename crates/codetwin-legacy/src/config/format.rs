@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 /// Supported output formats.
 ///
 /// Only `Markdown` is implemented for the MVP; `Html` is reserved for
-/// NEW_ROADMAP Phase 7.
+/// `NEW_ROADMAP` Phase 7.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum OutputFormat {

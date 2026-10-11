@@ -1,0 +1,2 @@
+# CodeTwin is a product name in prose, rather than a Rust identifier.
+doc-valid-idents = ["CodeTwin", ".."]

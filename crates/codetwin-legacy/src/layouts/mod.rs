@@ -1,4 +1,4 @@
-//! Rendering strategies (NEW_ROADMAP Phase 1.c + Phase 2).
+//! Rendering strategies (`NEW_ROADMAP` Phase 1.c + Phase 2).
 //!
 //! Each layout is a stateless renderer that consumes a [`crate::ir::CodeModel`]
 //! and produces one or more [`OutputFile`]s. Layouts are registered in a

@@ -1,5 +1,7 @@
 //! Mermaid diagram helpers.
 
+use std::fmt::Write as _;
+
 use crate::ir::{CodeModel, EdgeKind};
 
 /// Render `model.edges` as a Mermaid `graph TD` block.
@@ -11,19 +13,17 @@ pub fn graph_td(model: &CodeModel) -> String {
     let mut out = String::from("graph TD\n");
     for edge in &model.edges {
         let arrow = match edge.kind {
-            EdgeKind::Import => "-->",
             EdgeKind::Uses => "-.->",
-            EdgeKind::Implements => "==>",
-            EdgeKind::Extends => "==>",
-            EdgeKind::Calls => "-->",
+            EdgeKind::Implements | EdgeKind::Extends => "==>",
             _ => "-->",
         };
-        out.push_str(&format!(
-            "  {} {} {}\n",
+        let _ = writeln!(
+            out,
+            "  {} {} {}",
             sanitize(&edge.from.0),
             arrow,
             sanitize(&edge.to.0)
-        ));
+        );
     }
     out
 }

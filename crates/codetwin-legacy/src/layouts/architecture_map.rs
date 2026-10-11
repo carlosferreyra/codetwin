@@ -1,4 +1,4 @@
-//! MVP layout #2 — "I'm reviewing this system" (NEW_ROADMAP Phase 2.b).
+//! MVP layout #2 — "I'm reviewing this system" (`NEW_ROADMAP` Phase 2.b).
 
 use anyhow::Result;
 

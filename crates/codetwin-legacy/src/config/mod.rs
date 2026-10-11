@@ -1,7 +1,7 @@
 //! `codetwin.toml` schema and loading.
 //!
 //! The config is optional — [`Config::load_or_default`] never fails on a
-//! missing file, matching the "zero-config" promise in NEW_ROADMAP Phase 1.e.
+//! missing file, matching the "zero-config" promise in `NEW_ROADMAP` Phase 1.e.
 
 mod format;
 mod layer;

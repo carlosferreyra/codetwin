@@ -48,7 +48,7 @@ impl DriverRegistry {
     pub fn detect_all<'a>(&'a self, project_root: &Path) -> Vec<&'a dyn Driver> {
         self.drivers
             .iter()
-            .map(|d| d.as_ref())
+            .map(AsRef::as_ref)
             .filter(|d| d.detect(project_root))
             .collect()
     }
@@ -57,7 +57,7 @@ impl DriverRegistry {
     pub fn get(&self, name: &str) -> Option<&dyn Driver> {
         self.drivers
             .iter()
-            .map(|d| d.as_ref())
+            .map(AsRef::as_ref)
             .find(|d| d.name() == name)
     }
 }

@@ -1,5 +1,5 @@
 //! Filesystem watcher shared by `gen --watch`, `snapshot --watch`, and
-//! `diff --watch` (NEW_ROADMAP Phase 1.e).
+//! `diff --watch` (`NEW_ROADMAP` Phase 1.e).
 
 use std::sync::mpsc::channel;
 use std::time::Duration;

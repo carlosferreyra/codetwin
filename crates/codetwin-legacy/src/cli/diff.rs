@@ -7,7 +7,7 @@ use crate::config::Config;
 use crate::diff as diff_engine;
 
 /// Entry point for `codetwin diff`.
-pub fn run(args: DiffArgs, json: bool) -> Result<()> {
+pub(super) fn run(args: DiffArgs, json: bool) -> Result<()> {
     let config = Config::load_or_default()?;
 
     if args.watch {

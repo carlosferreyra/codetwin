@@ -1,4 +1,4 @@
-//! Structural diff smoke tests (NEW_ROADMAP Phase 4.b).
+//! Structural diff smoke tests (`NEW_ROADMAP` Phase 4.b).
 
 use codetwin_legacy::diff::diff;
 use codetwin_legacy::ir::CodeModel;

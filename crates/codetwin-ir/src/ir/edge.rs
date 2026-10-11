@@ -1,4 +1,4 @@
-//! Dependency edges — first-class in the IR (NEW_ROADMAP Phase 1.a).
+//! Dependency edges — first-class in the IR (`NEW_ROADMAP` Phase 1.a).
 
 use serde::{Deserialize, Serialize};
 

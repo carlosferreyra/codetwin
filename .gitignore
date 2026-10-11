@@ -10,6 +10,7 @@ docs/.codetwin.local.toml
 # Rust
 # =============================================================================
 /target/
+/.xtask/
 **/*.rs.bk
 **/mutants.out*/
 *.pdb

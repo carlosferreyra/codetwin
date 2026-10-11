@@ -1,4 +1,4 @@
-//! TypeScript driver — NEW_ROADMAP Phase 5.a.
+//! TypeScript driver — `NEW_ROADMAP` Phase 5.a.
 
 use std::path::{Path, PathBuf};
 
