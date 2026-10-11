@@ -40,7 +40,7 @@ impl LayoutRegistry {
     pub fn get(&self, name: &str) -> Option<&dyn Layout> {
         self.layouts
             .iter()
-            .map(|l| l.as_ref())
+            .map(AsRef::as_ref)
             .find(|l| l.name() == name)
     }
 }

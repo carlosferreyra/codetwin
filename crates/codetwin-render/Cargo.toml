@@ -1,6 +1,8 @@
 [package]
   description  = "CodeTwin output rendering: Markdown, Mermaid, and Layout trait + built-in layouts."
+  authors      = { workspace = true }
   edition      = { workspace = true }
+  homepage     = { workspace = true }
   license      = { workspace = true }
   name         = "codetwin-render"
   publish      = false
@@ -17,3 +19,6 @@
   codetwin-ir = { workspace = true }
   petgraph    = { workspace = true }
   thiserror   = { workspace = true }
+
+[lints]
+  workspace = true

@@ -1,4 +1,4 @@
-//! MVP layout #1 — "I just cloned this repo, what is it?" (NEW_ROADMAP Phase 2.a).
+//! MVP layout #1 — "I just cloned this repo, what is it?" (`NEW_ROADMAP` Phase 2.a).
 
 use anyhow::Result;
 

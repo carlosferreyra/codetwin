@@ -1,4 +1,4 @@
-//! Language drivers + auto-detection registry (NEW_ROADMAP Phase 1.b).
+//! Language drivers + auto-detection registry (`NEW_ROADMAP` Phase 1.b).
 //!
 //! Every language integration implements [`Driver`]. A [`DriverRegistry`]
 //! collects the available drivers and picks the ones whose [`Driver::detect`]
@@ -38,6 +38,6 @@ pub trait Driver: Send + Sync {
     /// Parse `paths` and produce a [`CodeModel`].
     ///
     /// Implementations may be called from multiple threads concurrently by
-    /// the pipeline — see NEW_ROADMAP Phase 1.d.
+    /// the pipeline — see `NEW_ROADMAP` Phase 1.d.
     fn parse(&self, paths: &[PathBuf]) -> Result<CodeModel>;
 }

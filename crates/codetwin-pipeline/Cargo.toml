@@ -1,6 +1,8 @@
 [package]
   description  = "CodeTwin orchestration: discover → parse → merge → render → write, plus snapshot, diff, and watch."
+  authors      = { workspace = true }
   edition      = { workspace = true }
+  homepage     = { workspace = true }
   license      = { workspace = true }
   name         = "codetwin-pipeline"
   publish      = false
@@ -26,3 +28,6 @@
   thiserror             = { workspace = true }
   tracing               = { workspace = true }
   walkdir               = { workspace = true }
+
+[lints]
+  workspace = true

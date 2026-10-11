@@ -39,6 +39,16 @@ snapshot tests and `codetwin diff`.
 
 ## 5. Pre-commit gate (all must pass)
 
+Use the repository CLI for routine checks:
+
+```bash
+cargo xtask check
+cargo xtask test
+```
+
+`test` includes `check`; `build` includes both and adds a release build. Do not run all three
+redundantly. `cargo xtask ci` adds workspace documentation checks. The underlying gate remains:
+
 ```bash
 cargo fmt --all
 cargo clippy --all-targets -- -D warnings
@@ -46,6 +56,12 @@ cargo test --all
 ```
 
 No `--no-verify`. If a hook fails, fix the cause.
+
+Prefer `cargo xtask scaffold` for roadmap-approved crates and repository capabilities. Read
+`cargo xtask --help` or subcommand help before choosing flags, and use `--dry-run` to inspect
+planned scaffolds. Preserve customized project files when a scaffold refuses replacement.
+Install optional tools only through an explicitly requested `cargo xtask tools sync <group>`.
+Release commands remain subject to section 7.
 
 ## 6. Rust style
 

@@ -1,4 +1,4 @@
-//! Snapshot capture & on-disk store (NEW_ROADMAP Phase 4.a).
+//! Snapshot capture & on-disk store (`NEW_ROADMAP` Phase 4.a).
 
 mod store;
 

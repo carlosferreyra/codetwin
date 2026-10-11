@@ -1,4 +1,4 @@
-//! Coupling & metrics layout — NEW_ROADMAP Phase 6.b.
+//! Coupling & metrics layout — `NEW_ROADMAP` Phase 6.b.
 
 use anyhow::Result;
 

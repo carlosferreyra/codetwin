@@ -1,4 +1,4 @@
-//! File discovery (NEW_ROADMAP Phase 1.e).
+//! File discovery (`NEW_ROADMAP` Phase 1.e).
 
 use std::path::PathBuf;
 

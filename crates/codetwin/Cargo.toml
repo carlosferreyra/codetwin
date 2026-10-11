@@ -1,12 +1,14 @@
 [package]
-  categories    = ["command-line-utilities", "development-tools"]
-  description   = "Zero-config, language-agnostic CLI that turns any git repository into high-quality visual documentation."
+  authors       = { workspace = true }
+  categories    = { workspace = true }
+  description   = { workspace = true }
   documentation = "https://docs.rs/codetwin"
   edition       = { workspace = true }
-  keywords      = ["architecture", "cli", "docs", "documentation", "generator"]
+  homepage      = { workspace = true }
+  keywords      = { workspace = true }
   license       = { workspace = true }
   name          = "codetwin"
-  readme        = "../../README.md"
+  readme        = { workspace = true }
   repository    = { workspace = true }
   rust-version  = { workspace = true }
   version       = { workspace = true }
@@ -24,3 +26,6 @@
 
 [package.metadata.dist]
   changelog = "../../CHANGELOG.md"
+
+[lints]
+  workspace = true

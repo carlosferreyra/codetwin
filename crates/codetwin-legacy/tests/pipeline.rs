@@ -34,7 +34,7 @@ fn discover_tolerates_missing_source_dir() {
     };
 
     let files = pipeline::discover(&config).unwrap();
-    assert!(files.is_empty());
+    assert_eq!(files, Vec::<std::path::PathBuf>::new());
 }
 
 #[test]

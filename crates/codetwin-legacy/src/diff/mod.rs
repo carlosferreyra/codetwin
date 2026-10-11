@@ -1,4 +1,4 @@
-//! Architecture diff (NEW_ROADMAP Phase 4.b + Phase 4.c).
+//! Architecture diff (`NEW_ROADMAP` Phase 4.b + Phase 4.c).
 
 mod engine;
 mod report;

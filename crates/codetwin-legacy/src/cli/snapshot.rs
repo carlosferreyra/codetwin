@@ -7,7 +7,7 @@ use crate::config::Config;
 use crate::snapshot;
 
 /// Entry point for `codetwin snapshot`.
-pub fn run(args: SnapshotArgs, _json: bool) -> Result<()> {
+pub(super) fn run(args: SnapshotArgs, _json: bool) -> Result<()> {
     let config = Config::load_or_default()?;
 
     if args.watch {

@@ -1,4 +1,4 @@
-//! Pipeline orchestration (NEW_ROADMAP Phase 1.d).
+//! Pipeline orchestration (`NEW_ROADMAP` Phase 1.d).
 //!
 //! Each stage is a standalone function so it can be unit-tested in isolation:
 //!
@@ -28,7 +28,7 @@ use crate::ir::CodeModel;
 pub struct GenOptions {
     /// Dump the merged IR as JSON instead of rendering.
     pub dump_ir: bool,
-    /// One file per module/layer (NEW_ROADMAP Phase 6.d).
+    /// One file per module/layer (`NEW_ROADMAP` Phase 6.d).
     pub multi_file: bool,
 }
 

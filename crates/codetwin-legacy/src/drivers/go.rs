@@ -1,4 +1,4 @@
-//! Go driver — NEW_ROADMAP Phase 5.b.
+//! Go driver — `NEW_ROADMAP` Phase 5.b.
 
 use std::path::{Path, PathBuf};
 

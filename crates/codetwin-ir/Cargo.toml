@@ -1,6 +1,8 @@
 [package]
   description  = "CodeTwin intermediate representation: CodeModel, Module, Symbol, Edge."
+  authors      = { workspace = true }
   edition      = { workspace = true }
+  homepage     = { workspace = true }
   license      = { workspace = true }
   name         = "codetwin-ir"
   publish      = false
@@ -18,3 +20,6 @@
 
 [dev-dependencies]
   pretty_assertions = { workspace = true }
+
+[lints]
+  workspace = true

@@ -1,0 +1,6 @@
+# Snapshot of stable release tags resolved for the template migration.
+[actions]
+checkout = "actions/checkout@v7.0.1"
+setup-rust = "moonrepo/setup-rust@v1.3.0"
+install = "taiki-e/install-action@v2.87.27"
+audit = "rustsec/audit-check@v2.0.0"

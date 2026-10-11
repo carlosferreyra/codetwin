@@ -1,4 +1,4 @@
-//! C4 Model layout — NEW_ROADMAP Phase 6.a.
+//! C4 Model layout — `NEW_ROADMAP` Phase 6.a.
 
 use anyhow::Result;
 

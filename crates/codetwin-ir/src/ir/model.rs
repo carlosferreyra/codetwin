@@ -6,9 +6,8 @@ use super::{Edge, Module};
 
 /// A language-agnostic snapshot of a project's structure.
 ///
-/// Produced by one or more [`crate::drivers::Driver`]s and consumed by
-/// layouts. Multiple `CodeModel`s can be merged — see
-/// [`crate::pipeline::merge`].
+/// Produced by language drivers and consumed by layouts. Multiple
+/// `CodeModel`s can be merged — see [`Self::merge`].
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CodeModel {
     /// Modules (files or logical namespaces) in declaration order.

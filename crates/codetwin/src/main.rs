@@ -6,7 +6,7 @@
 
 use anyhow::Result;
 use clap::Parser;
-use codetwin_legacy::cli::{Cli, Command, dispatch};
+use codetwin_legacy::cli::{Cli, Command, GenArgs, dispatch};
 
 fn main() {
     if let Err(err) = run() {
@@ -26,7 +26,7 @@ fn run() -> Result<()> {
 
     // Default subcommand is `gen` — match the behaviour of modern CLIs (e.g.
     // `cargo` without a subcommand still does something sensible).
-    let command = cli.command.unwrap_or(Command::Gen(Default::default()));
+    let command = cli.command.unwrap_or(Command::Gen(GenArgs::default()));
     dispatch(command, cli.json)
 }
 

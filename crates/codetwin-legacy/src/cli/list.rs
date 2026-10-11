@@ -7,7 +7,7 @@ use crate::drivers::DriverRegistry;
 use crate::layouts::LayoutRegistry;
 
 /// Entry point for `codetwin list`.
-pub fn run(args: ListArgs, json: bool) -> Result<()> {
+pub(super) fn run(args: &ListArgs, json: bool) -> Result<()> {
     // Default: show both when neither flag is given.
     let show_drivers = args.drivers || !args.layouts;
     let show_layouts = args.layouts || !args.drivers;

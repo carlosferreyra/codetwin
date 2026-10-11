@@ -116,6 +116,19 @@ the full index and dependency DAG):
 
 Each step (b–g) is a single commit. Tree must stay green at every step.
 
+### h. Adopt the Rust template tooling foundation
+
+- Migrate in place from `carlosferreyra/rust-template` at `62488bc`, keeping the existing
+  CodeTwin implementation, version, edition, and MSRV 1.93.
+- [x] Add private `tools/xtask`, its Cargo alias and metadata, stable toolchain configuration,
+      resolver 3, shared package metadata, and inherited workspace lints.
+- [x] Integrate the template's lean CI and development documentation; retain project-specific
+      agent rules and release integration.
+- [x] Test scaffold dry runs, idempotence, and protection of existing user-owned files.
+- [x] Validate `cargo xtask ci`, the existing generation integration test, and a release build.
+- Product-crate redesign and the existing crates.io packaging failure remain separate work;
+  this step does not change private crate publishing policy or release configuration.
+
 ---
 
 ## Phase 1 — Core Engine Redesign

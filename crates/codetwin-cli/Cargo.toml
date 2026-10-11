@@ -1,6 +1,8 @@
 [package]
   description  = "CodeTwin CLI surface (clap-derived) and subcommand dispatch."
+  authors      = { workspace = true }
   edition      = { workspace = true }
+  homepage     = { workspace = true }
   license      = { workspace = true }
   name         = "codetwin-cli"
   publish      = false
@@ -18,3 +20,6 @@
   codetwin-config   = { workspace = true }
   codetwin-pipeline = { workspace = true }
   tracing           = { workspace = true }
+
+[lints]
+  workspace = true

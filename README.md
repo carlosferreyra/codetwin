@@ -86,13 +86,35 @@ patterns = ["src/cli/**"]
 Requires Rust 1.93+ (edition 2024).
 
 ```bash
-cargo fmt --all
-cargo clippy --all-targets -- -D warnings
-cargo test --all
-cargo run -- list        # exercise the CLI
+cargo xtask check       # formatting, compilation, and Clippy
+cargo xtask test        # check, then workspace tests
+cargo xtask build       # test, then release build
+cargo run -p codetwin -- list
 ```
 
-See [`tests/README.md`](tests/README.md) for the testing cheatsheet (TDD + non-TDD workflows).
+`build` includes `test`, and `test` includes `check`; choose the command needed for the task.
+CI runs `cargo xtask ci`, which includes tests and workspace documentation. These commands use
+installed tools without installing or upgrading them.
+
+Product crates live under `crates/`; private repository automation lives under `tools/xtask`.
+Use `cargo xtask --help` and `cargo xtask scaffold --help` to inspect available commands. Add
+crates only when a roadmap-backed responsibility needs a separate interface; the existing
+empty crates remain transitional until the system design is settled.
+
+```bash
+cargo xtask scaffold crate <semantic-name> --dry-run
+cargo xtask scaffold ci --dry-run
+cargo xtask doctor
+```
+
+Scaffolds refuse to overwrite conflicting user-owned files. Optional tool installation is
+explicit: `cargo xtask tools sync <group>` installs the latest stable tools under `.xtask/tools`
+and updates the shared stable Rust toolchain. CodeTwin's declared MSRV remains 1.93.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow and
+[`crates/codetwin-legacy/tests/README.md`](crates/codetwin-legacy/tests/README.md) for the testing
+cheatsheet. The template snapshot and migration decisions are recorded in
+[`docs/TEMPLATE_MIGRATION.md`](docs/TEMPLATE_MIGRATION.md).
 
 ### Release pipeline
 

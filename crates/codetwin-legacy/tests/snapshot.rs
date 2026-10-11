@@ -1,4 +1,4 @@
-//! `SnapshotStore` round-trip (NEW_ROADMAP Phase 4.a).
+//! `SnapshotStore` round-trip (`NEW_ROADMAP` Phase 4.a).
 
 use codetwin_legacy::ir::{CodeModel, Module, ModuleId};
 use codetwin_legacy::snapshot::SnapshotStore;
