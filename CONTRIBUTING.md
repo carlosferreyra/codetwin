@@ -3,8 +3,8 @@
 Requires Rust 1.93 or newer. `rust-toolchain.toml` selects stable Rust with Clippy and rustfmt;
 the package manifests retain the 1.93 minimum supported version.
 
-Read [AGENTS.md](AGENTS.md) and [ROADMAP.md](ROADMAP.md) before changing behavior. Keep each task
-scoped to an existing roadmap step and add tests for behavior changes.
+Read [AGENTS.md](AGENTS.md) before changing behavior. Use [ROADMAP.md](ROADMAP.md) for project
+context and add tests for behavior changes.
 
 ```sh
 cargo xtask check
@@ -25,7 +25,7 @@ when changing the generation pipeline:
 cargo test -p codetwin-legacy --test pipeline -- --ignored
 ```
 
-Use `cargo xtask scaffold --help` for new roadmap-approved capabilities. Product crates use
+Use `cargo xtask scaffold --help` for capabilities required by the task. Product crates use
 semantic `codetwin-*` names and live under `crates/`. Development commands belong to private
 `tools/xtask`. Keep behavior together until a separate responsibility earns a crate.
 
