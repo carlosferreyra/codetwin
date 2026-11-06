@@ -37,3 +37,12 @@ shared stable Rust toolchain. Routine checks do not install tools.
 The repository uses lean CI. Full CI, audit schedules, and Dependabot remain opt-in capabilities.
 The existing release pipeline is separate from this migration; do not run release scaffolds to
 replace its configuration without approval.
+
+When changing release wrappers, run their workspace-metadata regression test with Python 3.12+
+(and Cargo, Bun and uv available):
+
+```sh
+python3 scripts/test_release_wrappers.py
+```
+
+This generates wrappers in a temporary fixture; it does not publish or install the binary.

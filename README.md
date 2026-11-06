@@ -3,26 +3,56 @@
 > Zero-config, language-agnostic CLI that turns any git repository into high-quality visual
 > documentation — useful from first `git clone` to ongoing refactoring.
 
-> **Status**: v2 architecture scaffold. Phase 1 of [`ROADMAP.md`](ROADMAP.md) is underway; the
-> binary builds and runs end-to-end but drivers currently produce empty `CodeModel`s. See the
-> `TODO(Phase N.x)` markers in the source for concrete work items.
+> **Status**: the first working slice inventories Rust workspace packages and declared local
+> dependencies, then generates a Markdown overview with linked crate pages. Deeper source
+> parsing and the legacy language drivers remain scaffolded.
 
 ---
 
 ## Install
 
-```bash
-cargo install codetwin         # crates.io
-uv tool install codetwin       # PyPI wrapper (native binary under the hood)
-npm install -g codetwin        # npm wrapper
-```
-
-All three package managers install the same native binary. The npm/PyPI wrappers bootstrap the
-binary on first run via the `cargo-dist` installer.
+For the current development version, use the checkout commands below. Registry packages may
+represent older releases; the current workspace is not ready for crates.io publication because
+its internal product dependencies are private and path-only. npm and PyPI wrapper generation
+is configured, but a successful wrapper build does not establish release availability.
 
 ---
 
 ## Quick start
+
+```bash
+# Inspect this workspace without writing files.
+cargo run -p codetwin -- inspect . --json
+
+# Generate the overview and linked crate pages.
+cargo run -p codetwin -- visualize . --output docs/code
+
+# Analyze another checkout; relative output is rooted in its Cargo workspace.
+cargo run -p codetwin -- visualize /path/to/repository --output docs/code
+```
+
+Open [the generated CodeTwin overview](docs/code/index.md) to explore this repository.
+Each crate page shows its targets, manifest/source links, local dependencies, and dependents.
+Isolated workspace members are included. Dependency arrows point from dependent to dependency;
+dev/build dependencies, aliases, optional flags, and target conditions retain their qualifications.
+
+`inspect` without `--json` prints a concise inventory. Cargo must be available; analysis uses
+`cargo metadata --no-deps --offline --locked` without compiling the analyzed repository or fetching
+dependencies. The graph includes workspace members and their declared local dependencies,
+not external packages, resolved feature activation, or runtime calls. Members and target sources
+must be inside the workspace root. JSON paths are relative to that root.
+
+`visualize` defaults to `docs/code`, relative to the analyzed Cargo workspace root, and generates
+`index.md` plus detail pages under `crates/`. Repeated runs refresh pages bearing CodeTwin's ownership comment.
+Conflicts with user-authored files, non-directory parents, and symlink destinations are refused
+before writing; unrelated files are preserved. Source links are relative to each page and URL-encoded.
+`visualize --json` fails with guidance to use `inspect --json`.
+
+See [the smoke tests and acceptance cases](docs/SMOKE_TESTS.md) for reproducible checks.
+
+### Legacy commands
+
+The existing command routes remain available; their source extraction is still scaffolded:
 
 ```bash
 # Zero-config run — writes docs/architecture.md with the project-overview layout.
@@ -36,13 +66,15 @@ codetwin gen --watch
 
 # Dump the intermediate representation as JSON.
 codetwin gen --dump-ir > codemodel.json
-
-# Capture / diff architectural snapshots between commits.
-codetwin snapshot --ref HEAD~5
-codetwin diff HEAD~5 HEAD
 ```
 
-Global flags work on every subcommand: `--verbose`, `--quiet`, `-C/--cwd`, `--json`.
+`snapshot` and `diff` remain registered compatibility routes, but capture and comparison are
+not implemented. `init` currently overwrites configuration even without `--force`; `gen --save`
+and `--multi-file` are incomplete. Legacy drivers emit empty models.
+
+Global flags: `--verbose`, `--quiet`, `-C/--cwd`, `--json` where supported.
+For `inspect` and `visualize`, `-C` sets the base for resolving the repository path.
+Legacy commands retain their existing working-directory behavior; invoking no subcommand still runs `gen`.
 
 ---
 
@@ -60,6 +92,9 @@ Global flags work on every subcommand: `--verbose`, `--quiet`, `-C/--cwd`, `--js
 ---
 
 ## Configuration (`codetwin.toml`)
+
+This configuration applies to the legacy commands. `inspect` and `visualize` use their
+repository and output arguments.
 
 Everything is optional. See the checked-in [`codetwin.toml`](codetwin.toml) for an annotated
 starting point.
@@ -127,6 +162,7 @@ after GitHub Releases. This is out of roadmap scope.
 
 - GitHub: <https://github.com/carlosferreyra/codetwin>
 - Roadmap: [`ROADMAP.md`](ROADMAP.md)
+- Consolidation: [`docs/CONSOLIDATION.md`](docs/CONSOLIDATION.md)
 - Changelog: [`CHANGELOG.md`](CHANGELOG.md)
 
 ## License

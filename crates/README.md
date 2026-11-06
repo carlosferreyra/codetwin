@@ -7,11 +7,15 @@ adapters, not one).
 Private development automation lives at `tools/xtask`, outside the product crates. Its commands
 run checks and scaffold roadmap-approved capabilities; it is not part of the shipped binary.
 
+Five successor crates (`cli`, `pipeline`, `render`, `drivers`, `config`) are scaffolds.
+Their roles below describe proposed ownership; current legacy implementations remain in
+`codetwin-legacy`. New workspace analysis and visualization live in `codetwin`.
+
 ## Index
 
 | Crate                                          | Role                                                                              | Depends on                                                                |
 | ---------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| [`codetwin`](codetwin/)                       | Published binary. `main.rs` only — parse argv, init tracing, dispatch.            | `codetwin-cli` (eventually); `codetwin-legacy` (today)                    |
+| [`codetwin`](codetwin/)                       | Binary and library: CLI, Rust workspace inventory, Markdown visualization.            | `codetwin-ir`, `codetwin-legacy`                    |
 | [`codetwin-cli`](codetwin-cli/)               | `clap`-derived CLI surface and subcommand dispatch.                                | `codetwin-config`, `codetwin-pipeline`                                    |
 | [`codetwin-pipeline`](codetwin-pipeline/)     | Orchestration: discover → parse → merge → render → write. Owns snapshot, diff, watch. | `codetwin-ir`, `codetwin-config`, `codetwin-drivers`, `codetwin-render`   |
 | [`codetwin-render`](codetwin-render/)         | Markdown / Mermaid builders and the `Layout` trait + built-in layouts.            | `codetwin-ir`                                                             |
@@ -22,16 +26,15 @@ run checks and scaffold roadmap-approved capabilities; it is not part of the shi
 
 ## Dependency DAG
 
+```text
+codetwin (binary and library)
+  ├── codetwin-ir
+  └── codetwin-legacy
+       └── codetwin-ir
 ```
-codetwin (bin)
-  └── codetwin-legacy           ← today
-       └── (will become)
-            codetwin-cli
-              └── codetwin-pipeline
-                   ├── codetwin-render ──┐
-                   ├── codetwin-drivers ─┼── codetwin-ir
-                   └── codetwin-config   ┘
-```
+
+This is the implemented product chain. For all declared workspace dependencies, including
+scaffolds and development automation, see [the generated overview](../docs/code/index.md).
 
 Edges only point downward. A leaf crate must never depend on a higher-level
 one. Adding an upward edge needs an explicit ADR.
@@ -45,7 +48,7 @@ one. Adding an upward edge needs an explicit ADR.
   via `[workspace.package]`. Releases bump every crate together.
 - **External deps**: declared once in `[workspace.dependencies]` at the root,
   inherited by members with `{ workspace = true }`. Adding a new external
-  dependency is a workspace-level decision (see [AGENTS.md §7](../AGENTS.md)).
+  dependency is a workspace-level decision (see [AGENTS.md](../AGENTS.md)).
 - **Lint policy**: declared in `[workspace.lints]` and inherited with `[lints] workspace = true`.
   CodeTwin forbids unsafe code and enables the template's Rust and Clippy warning policies.
 - **Internal deps**: also declared in `[workspace.dependencies]` with `path =
@@ -58,14 +61,15 @@ one. Adding an upward edge needs an explicit ADR.
 ## Adding a new crate
 
 1. Confirm the seam is real (two adapters, not one — see [AGENTS.md](../AGENTS.md)).
-2. Add the crate's directory under `crates/<name>/` with `Cargo.toml` + `src/lib.rs`.
-3. Register it in `[workspace.dependencies]` at the root.
+2. Preview `cargo xtask scaffold crate <semantic-name> --dry-run`.
+3. Run the scaffold with the required visibility; review its manifest and source changes.
 4. Add a row to the table above.
 5. Update the dependency DAG diagram if a new edge appears.
 
 ## Phase 0 migration status
 
-`codetwin-legacy` is being decomposed. As modules move out:
+IR extraction is complete. Further decomposition is deferred until ownership boundaries are
+justified; the earlier proposed moves were:
 
 - `ir/` → `codetwin-ir`
 - `config/` → `codetwin-config`

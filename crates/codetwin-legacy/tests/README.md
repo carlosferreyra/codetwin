@@ -5,9 +5,13 @@ so the layout stays coherent.
 
 ---
 
+Run legacy commands with `-p codetwin-legacy` from the workspace root. The executable
+acceptance suite lives at `crates/codetwin/tests/workspace.rs`; IR tests live in
+`crates/codetwin-ir/tests/ir.rs`.
+
 ## What goes where
 
-Rust has **three first-class test locations**. We use all of them for different reasons.
+Rust has several test locations. We use all of them for different reasons.
 
 | Location                | What it tests                                       | How it's run                         |
 | ----------------------- | --------------------------------------------------- | ------------------------------------ |
@@ -19,7 +23,7 @@ Rust has **three first-class test locations**. We use all of them for different 
 
 ### Rules of thumb
 
-- **Integration tests live in `tests/`.** They import `codetwin` as an external crate and use only
+- **Integration tests live in `tests/`.** They import `codetwin_legacy` as an external crate and use only
   `pub` items. One file per concern (e.g. `tests/ir.rs`, `tests/pipeline.rs`) — no `mod` wrappers.
 - **Unit tests live next to the code they test,** inside a `#[cfg(test)] mod tests { ... }` block
   at the bottom of the file. They can reach into private items.
@@ -172,7 +176,7 @@ to dodge test-writing.
 
 | File                      | What it covers                                              |
 | ------------------------- | ----------------------------------------------------------- |
-| `tests/ir.rs`             | IR serde round-trips, `CodeModel::merge` semantics          |
+| `../../codetwin-ir/tests/ir.rs` | IR serde round-trips and model merge (separate package) |
 | `tests/config.rs`         | `codetwin.toml` parsing, defaults, missing-file fallback    |
 | `tests/drivers.rs`        | `DriverRegistry` detection + lookup                         |
 | `tests/layouts.rs`        | Layout registry + MVP layout smoke tests                    |
@@ -187,7 +191,7 @@ to dodge test-writing.
 ## Adding a new test file
 
 1. Create `tests/<concern>.rs`.
-2. `use codetwin::...;` — only `pub` items are reachable.
+2. `use codetwin_legacy::...;` — only `pub` items are reachable.
 3. Prefer many small `#[test]` functions over one big one — failure messages become self-
    documenting.
 4. Don't `pub mod` anything under `tests/`. Shared helpers live in `tests/common/mod.rs` (create

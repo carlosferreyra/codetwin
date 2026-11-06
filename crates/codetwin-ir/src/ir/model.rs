@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::{Edge, Module};
+use super::{Edge, Module, Package, PackageDependency};
 
 /// A language-agnostic snapshot of a project's structure.
 ///
@@ -10,6 +10,12 @@ use super::{Edge, Module};
 /// `CodeModel`s can be merged — see [`Self::merge`].
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CodeModel {
+    /// Workspace packages, separate from source modules.
+    #[serde(default)]
+    pub packages: Vec<Package>,
+    /// Declared local package dependencies in canonical order.
+    #[serde(default)]
+    pub package_dependencies: Vec<PackageDependency>,
     /// Modules (files or logical namespaces) in declaration order.
     pub modules: Vec<Module>,
     /// First-class dependency edges between modules/symbols.
@@ -25,6 +31,8 @@ impl CodeModel {
     /// Create an empty model tagged with the given language.
     pub fn new(language: impl Into<String>) -> Self {
         Self {
+            packages: Vec::new(),
+            package_dependencies: Vec::new(),
             modules: Vec::new(),
             edges: Vec::new(),
             language: language.into(),
@@ -37,6 +45,8 @@ impl CodeModel {
     ///                  same file when two drivers contribute overlapping
     ///                  information (e.g. Rust `proc-macro` expansion).
     pub fn merge(&mut self, other: CodeModel) {
+        self.packages.extend(other.packages);
+        self.package_dependencies.extend(other.package_dependencies);
         self.modules.extend(other.modules);
         self.edges.extend(other.edges);
         if other.language.is_empty() {

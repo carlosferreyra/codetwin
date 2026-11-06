@@ -19,13 +19,19 @@
 
 [dependencies]
   anyhow             = { workspace = true }
+  cargo_metadata     = { workspace = true }
   clap               = { workspace = true }
+  codetwin-ir        = { workspace = true }
   codetwin-legacy    = { workspace = true }
+  serde_json         = { workspace = true }
   tracing            = { workspace = true }
   tracing-subscriber = { workspace = true }
 
 [package.metadata.dist]
   changelog = "../../CHANGELOG.md"
+
+[dev-dependencies]
+  tempfile   = { workspace = true }
 
 [lints]
   workspace = true

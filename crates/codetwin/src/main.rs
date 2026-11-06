@@ -6,7 +6,7 @@
 
 use anyhow::Result;
 use clap::Parser;
-use codetwin_legacy::cli::{Cli, Command, GenArgs, dispatch};
+use codetwin::cli::{Cli, dispatch};
 
 fn main() {
     if let Err(err) = run() {
@@ -20,14 +20,7 @@ fn run() -> Result<()> {
     let cli = Cli::parse();
     init_tracing(cli.verbose, cli.quiet);
 
-    if let Some(cwd) = cli.cwd.as_deref() {
-        std::env::set_current_dir(cwd)?;
-    }
-
-    // Default subcommand is `gen` — match the behaviour of modern CLIs (e.g.
-    // `cargo` without a subcommand still does something sensible).
-    let command = cli.command.unwrap_or(Command::Gen(GenArgs::default()));
-    dispatch(command, cli.json)
+    dispatch(cli)
 }
 
 fn init_tracing(verbose: bool, quiet: bool) {

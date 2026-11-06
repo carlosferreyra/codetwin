@@ -9,11 +9,13 @@
 mod edge;
 mod model;
 mod module;
+mod package;
 mod symbol;
 mod visibility;
 
 pub use edge::{Edge, EdgeKind};
 pub use model::CodeModel;
 pub use module::{Module, ModuleId};
+pub use package::{Package, PackageDependency, PackageDependencyKind, PackageId, PackageTarget};
 pub use symbol::{Symbol, SymbolKind};
 pub use visibility::Visibility;

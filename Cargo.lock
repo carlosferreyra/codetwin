@@ -179,8 +179,12 @@ name = "codetwin"
 version = "0.2.0"
 dependencies = [
  "anyhow",
+ "cargo_metadata",
  "clap",
+ "codetwin-ir",
  "codetwin-legacy",
+ "serde_json",
+ "tempfile",
  "tracing",
  "tracing-subscriber",
 ]

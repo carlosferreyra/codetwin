@@ -1,5 +1,18 @@
 # CodeTwin Roadmap
 
+## Current status (2026-11-06)
+
+The Rust workspace inventory and Markdown Visualization Set are implemented through
+`inspect` and `visualize`; see [acceptance evidence](docs/SMOKE_TESTS.md). Next product work
+is source-level detail and relationship extraction. The five successor crates remain scaffolds.
+
+The phase plan below records the earlier legacy rewrite. Its crate decomposition is a proposal,
+not the required next step. Checked items describe specific scaffolding or mechanisms, not
+complete language analysis. [CONTEXT.md](CONTEXT.md) defines the current product vocabulary;
+[the consolidation record](docs/CONSOLIDATION.md) explains the repository cleanup.
+
+## Earlier phase plan
+
 > **Vision**: A zero-config, language-agnostic CLI that turns any git repository into high-quality
 > visual documentation — useful from first `git clone` to ongoing refactoring.
 

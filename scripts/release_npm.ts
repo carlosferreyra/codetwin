@@ -24,25 +24,26 @@ class PackageMetadata {
   }
 
   static async fromCargo(): Promise<PackageMetadata> {
-    const content = await Bun.file("Cargo.toml").text();
-    const extract = (key: string) => {
-      const match = content.match(new RegExp(`^\\s+${key}\\s*=\\s*"([^"]+)"`, "m"));
-      return match ? match[1] : "";
-    };
-
-    const name = extract("name");
-    const version = extract("version");
-
-    if (!name || !version) {
-      throw new Error("Cargo.toml is missing name/version.");
+    const result = Bun.spawnSync([
+      "cargo", "metadata", "--no-deps", "--offline", "--locked",
+      "--format-version", "1", "--manifest-path", "crates/codetwin/Cargo.toml",
+    ]);
+    if (result.exitCode !== 0) {
+      throw new Error(result.stderr.toString());
+    }
+    const data = JSON.parse(result.stdout.toString()).packages.find(
+      (pkg: { name: string }) => pkg.name === "codetwin",
+    );
+    if (!data) {
+      throw new Error("Cargo metadata is missing the codetwin package.");
     }
 
     return new PackageMetadata(
-      name,
-      version,
-      extract("description") || "Rust CLI wrapper",
-      extract("repository"),
-      extract("license") || "MIT",
+      data.name,
+      data.version,
+      data.description || "Rust CLI wrapper",
+      data.repository,
+      data.license || "MIT",
     );
   }
 }

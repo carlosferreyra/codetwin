@@ -3,16 +3,13 @@
 # dependencies = []
 # ///
 
+import json
+import subprocess
 import sys
 import textwrap
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Self
-
-try:
-    import tomllib
-except ImportError:
-    import tomli as tomllib
 
 
 @dataclass(frozen=True)
@@ -52,11 +49,15 @@ class PackageMetadata:
 
     @classmethod
     def from_cargo(cls, root: Path) -> Self:
-        cargo_path = root / "Cargo.toml"
-        if not cargo_path.exists():
-            raise FileNotFoundError(f"Missing Cargo.toml at {root}")
-
-        data = tomllib.loads(cargo_path.read_text())["package"]
+        result = subprocess.run(
+            ["cargo", "metadata", "--no-deps", "--offline", "--locked",
+             "--format-version", "1", "--manifest-path", "crates/codetwin/Cargo.toml"],
+            cwd=root, check=True, capture_output=True, text=True,
+        )
+        data = next(
+            package for package in json.loads(result.stdout)["packages"]
+            if package["name"] == "codetwin"
+        )
 
         parsed_authors = []
         for raw_author in data.get("authors", []):
@@ -71,9 +72,9 @@ class PackageMetadata:
         return cls(
             name=data["name"],
             version=data["version"],
-            description=data.get("description", "Rust CLI wrapper"),
+            description=data.get("description") or "Rust CLI wrapper",
             repository=data.get("repository", ""),
-            license_id=data.get("license", "MIT"),
+            license_id=data.get("license") or "MIT",
             authors=parsed_authors,
         )
 

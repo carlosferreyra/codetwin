@@ -42,10 +42,16 @@ remain optional.
 
 ## Publication boundary
 
-The existing crates.io packaging failure remains: the published binary depends on private,
+At the migration baseline, the crates.io packaging failure was: the published binary depends on private,
 path-only `codetwin-legacy`. Resolving the dependency's publication policy belongs to the
 product-crate and release design, rather than this tooling migration. No release workflows,
 release scripts, wrapper versions, or publication settings are changed here.
+
+Current consolidation note: `codetwin` now also depends directly on private, path-only
+`codetwin-ir`, which is the first missing-version error reported by packaging. Both internal
+product dependencies need a publication policy before crates.io packaging can work.
+Wrapper metadata loading was adapted to the workspace during consolidation; no packages
+were published and crate publication settings remain unchanged.
 
 ## Verification
 
