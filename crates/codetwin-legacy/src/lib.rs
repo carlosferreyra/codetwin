@@ -28,7 +28,7 @@
 pub use anyhow::{Context, Result};
 
 pub mod cli;
-pub mod config;
+pub use codetwin_config as config;
 pub mod diff;
 pub mod drivers;
 pub use codetwin_ir as ir;

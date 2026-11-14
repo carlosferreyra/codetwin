@@ -205,7 +205,9 @@ name = "codetwin-config"
 version = "0.2.0"
 dependencies = [
  "anyhow",
+ "pretty_assertions",
  "serde",
+ "tempfile",
  "thiserror 1.0.69",
  "toml",
 ]
@@ -237,6 +239,7 @@ version = "0.2.0"
 dependencies = [
  "anyhow",
  "clap",
+ "codetwin-config",
  "codetwin-ir",
  "glob",
  "ignore",

@@ -16,6 +16,7 @@
 
 [dependencies]
   anyhow                = { workspace = true }
+  codetwin-config       = { workspace = true }
   codetwin-ir           = { workspace = true }
   clap                  = { workspace = true }
   glob                  = { workspace = true }
