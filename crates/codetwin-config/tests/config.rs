@@ -1,6 +1,6 @@
 //! `codetwin.toml` parsing, defaults, and missing-file fallback.
 
-use codetwin_legacy::config::{Config, OutputFormat};
+use codetwin_config::{Config, OutputFormat};
 use pretty_assertions::assert_eq;
 use tempfile::TempDir;
 

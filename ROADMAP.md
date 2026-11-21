@@ -100,8 +100,8 @@ the full index and dependency DAG):
 
 ### c. Move `config/` → `codetwin-config`
 
-- [ ] Lift `codetwin-legacy::config` into `codetwin-config`.
-- [ ] Move `tests/config.rs` to `crates/codetwin-config/tests/`.
+- [x] Lift `codetwin-legacy::config` into `codetwin-config`.
+- [x] Move `tests/config.rs` to `crates/codetwin-config/tests/`.
 
 ### d. Move `drivers/` → `codetwin-drivers`
 
